@@ -6,32 +6,32 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS public.categoria
 (
     id_categoria serial NOT NULL,
-    nombre character varying COLLATE pg_catalog."default",
-    descripcion character varying COLLATE pg_catalog."default",
+    nombre character varying COLLATE pg_catalog."default" NOT NULL,
+    descripcion character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT categoria_pkey PRIMARY KEY (id_categoria)
 );
 
 CREATE TABLE IF NOT EXISTS public.cliente
 (
     id_cliente serial NOT NULL,
-    nombre character varying COLLATE pg_catalog."default",
-    apellido character varying COLLATE pg_catalog."default",
-    dni character varying COLLATE pg_catalog."default",
-    direccion character varying COLLATE pg_catalog."default",
-    telefono character varying COLLATE pg_catalog."default",
-    email character varying COLLATE pg_catalog."default",
-    id_tipo_cliente integer,
+    nombre character varying COLLATE pg_catalog."default" NOT NULL,
+    apellido character varying COLLATE pg_catalog."default" NOT NULL,
+    dni character varying COLLATE pg_catalog."default" NOT NULL,
+    direccion character varying COLLATE pg_catalog."default" NOT NULL,
+    telefono character varying COLLATE pg_catalog."default" NOT NULL,
+    email character varying COLLATE pg_catalog."default" NOT NULL,
+    id_tipo_cliente integer NOT NULL,
     CONSTRAINT cliente_pkey1 PRIMARY KEY (id_cliente)
 );
 
 CREATE TABLE IF NOT EXISTS public.detalle_factura
 (
     id_detalle serial NOT NULL,
-    id_factura integer,
-    id_producto integer,
-    cantidad integer,
-    precio_unitario numeric,
-    subtotal numeric,
+    id_factura integer NOT NULL,
+    id_producto integer NOT NULL,
+    cantidad integer NOT NULL,
+    precio_unitario numeric NOT NULL,
+    subtotal numeric NOT NULL,
     CONSTRAINT datelle_factura_pkey PRIMARY KEY (id_detalle)
 );
 
@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS public.factura
 (
     id_factura serial NOT NULL,
     numero_factura character varying COLLATE pg_catalog."default" NOT NULL,
-    id_cliente integer,
-    id_forma_pago integer,
-    fecha_generacion date,
-    total numeric,
-    observaciones character varying COLLATE pg_catalog."default",
+    id_cliente integer NOT NULL,
+    id_forma_pago integer NOT NULL,
+    fecha_generacion date NOT NULL,
+    total numeric NOT NULL,
+    observaciones character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT factura_pkey PRIMARY KEY (id_factura),
     CONSTRAINT "UK_numero_factura" UNIQUE (numero_factura)
 );
@@ -51,19 +51,19 @@ CREATE TABLE IF NOT EXISTS public.factura
 CREATE TABLE IF NOT EXISTS public.forma_pago
 (
     id_forma_pago serial NOT NULL,
-    nombre character varying COLLATE pg_catalog."default",
-    descripcion character varying COLLATE pg_catalog."default",
+    nombre character varying COLLATE pg_catalog."default" NOT NULL,
+    descripcion character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT forma_pago_pkey PRIMARY KEY (id_forma_pago)
 );
 
 CREATE TABLE IF NOT EXISTS public.producto
 (
     id_producto serial NOT NULL,
-    nombre character varying COLLATE pg_catalog."default",
-    descripcion character varying COLLATE pg_catalog."default",
-    precio numeric,
-    stock integer,
-    id_categoria integer,
+    nombre character varying COLLATE pg_catalog."default" NOT NULL,
+    descripcion character varying COLLATE pg_catalog."default" NOT NULL,
+    precio numeric NOT NULL,
+    stock integer NOT NULL,
+    id_categoria integer NOT NULL,
     CONSTRAINT producto_pkey PRIMARY KEY (id_producto)
 );
 
@@ -100,16 +100,16 @@ ALTER TABLE IF EXISTS public.detalle_factura
 
 
 ALTER TABLE IF EXISTS public.factura
-    ADD CONSTRAINT "FK_id_cliente" FOREIGN KEY (id_cliente)
-    REFERENCES public.cliente (id_cliente) MATCH SIMPLE
+    ADD CONSTRAINT "FK_forma_pago" FOREIGN KEY (id_forma_pago)
+    REFERENCES public.forma_pago (id_forma_pago) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
 ALTER TABLE IF EXISTS public.factura
-    ADD CONSTRAINT "FK_forma_pago" FOREIGN KEY (id_forma_pago)
-    REFERENCES public.forma_pago (id_forma_pago) MATCH SIMPLE
+    ADD CONSTRAINT "FK_id_cliente" FOREIGN KEY (id_cliente)
+    REFERENCES public.cliente (id_cliente) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
