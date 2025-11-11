@@ -1,4 +1,5 @@
-package Objetos;
+package VentasDAO.Objetos;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -14,8 +15,18 @@ public class Factura {
     private FormaPago formapago;
     private List<DetalleFactura> detallefactura;
 
-    public Factura() {
 
+    public Factura(int idFactura, String numeroFactura, int idCliente, int idFormaPago, Date fechaGeneracion, float total, String observaciones, Cliente cliente, FormaPago formapago, List<DetalleFactura> detallefactura) {
+        this.idFactura = idFactura;
+        this.numeroFactura = numeroFactura;
+        this.idCliente = idCliente;
+        this.idFormaPago = idFormaPago;
+        this.fechaGeneracion = fechaGeneracion;
+        this.total = total;
+        this.observaciones = observaciones;
+        this.cliente = cliente;
+        this.formapago = formapago;
+        this.detallefactura = detallefactura;
     }
 
     public int getIdFactura() {

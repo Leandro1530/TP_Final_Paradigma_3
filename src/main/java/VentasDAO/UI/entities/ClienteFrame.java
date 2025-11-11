@@ -1,96 +1,201 @@
-package com.yovani.ventas.ui.entities;
+package VentasDAO.UI.entities;
 
-import com.yovani.ventas.dao.ClienteDAO;
-import com.yovani.ventas.dao.TipoClienteDAO;
-import com.yovani.ventas.model.Cliente;
-import com.yovani.ventas.model.TipoCliente;
+import VentasDAO.DAO.ClienteDAO;
+import VentasDAO.DAO.TipoClienteDAO;
+import VentasDAO.Objetos.Cliente;
+import VentasDAO.Objetos.TipoCliente;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
 
+/**
+ * ABM básico para la entidad {@link Cliente}.
+ */
 public class ClienteFrame extends JDialog {
-    private final ClienteDAO dao = new ClienteDAO();
-    private final TipoClienteDAO tipoDAO = new TipoClienteDAO();
-    private JTable table;
-    private JTextField txtNombre, txtApellido, txtDni, txtDireccion, txtTelefono, txtEmail;
-    private JComboBox<TipoCliente> cbTipo;
-    private Integer selectedId = null;
 
-    public ClienteFrame(Window owner) {
+    private final ClienteDAO clienteDAO = new ClienteDAO();
+    private final TipoClienteDAO tipoClienteDAO = new TipoClienteDAO();
+
+    private final JTable tablaClientes = new JTable();
+    private final JTextField txtNombre = new JTextField();
+    private final JTextField txtApellido = new JTextField();
+    private final JTextField txtDni = new JTextField();
+    private final JTextField txtDireccion = new JTextField();
+    private final JTextField txtTelefono = new JTextField();
+    private final JTextField txtEmail = new JTextField();
+    private final JComboBox<TipoCliente> cbTipo = new JComboBox<>();
+
+    private Integer idSeleccionado;
+
+    public ClienteFrame(java.awt.Window owner) {
         super(owner, "Clientes", ModalityType.APPLICATION_MODAL);
-        setSize(980,560); setLocationRelativeTo(owner);
+        setSize(900, 560);
+        setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        JPanel form = new JPanel(new GridLayout(3,4,8,8));
-        txtNombre = new JTextField(); txtApellido = new JTextField();
-        txtDni = new JTextField(); txtDireccion = new JTextField();
-        txtTelefono = new JTextField(); txtEmail = new JTextField();
-        cbTipo = new JComboBox<>(tipoDAO.listar().toArray(new TipoCliente[0]));
-        cbTipo.setSelectedIndex(-1);
+        JPanel panelFormulario = new JPanel(new GridLayout(3, 4, 8, 8));
+        panelFormulario.add(new JLabel("Nombre:"));
+        panelFormulario.add(txtNombre);
+        panelFormulario.add(new JLabel("Apellido:"));
+        panelFormulario.add(txtApellido);
+        panelFormulario.add(new JLabel("DNI:"));
+        panelFormulario.add(txtDni);
+        panelFormulario.add(new JLabel("Dirección:"));
+        panelFormulario.add(txtDireccion);
+        panelFormulario.add(new JLabel("Teléfono:"));
+        panelFormulario.add(txtTelefono);
+        panelFormulario.add(new JLabel("Email:"));
+        panelFormulario.add(txtEmail);
+        panelFormulario.add(new JLabel("Tipo Cliente:"));
+        panelFormulario.add(cbTipo);
+        add(panelFormulario, BorderLayout.NORTH);
 
-        form.add(new JLabel("Nombre:")); form.add(txtNombre);
-        form.add(new JLabel("Apellido:")); form.add(txtApellido);
-        form.add(new JLabel("DNI:")); form.add(txtDni);
-        form.add(new JLabel("Dirección:")); form.add(txtDireccion);
-        form.add(new JLabel("Teléfono:")); form.add(txtTelefono);
-        form.add(new JLabel("Email:")); form.add(txtEmail);
-        form.add(new JLabel("Tipo Cliente:")); form.add(cbTipo);
-        add(form, BorderLayout.NORTH);
+        add(new JScrollPane(tablaClientes), BorderLayout.CENTER);
 
-        table = new JTable();
-        add(new JScrollPane(table), BorderLayout.CENTER);
-
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnNuevo = new JButton("Guardar/Nuevo");
-        JButton btnEditar = new JButton("Editar selección");
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnEditar = new JButton("Editar");
         JButton btnEliminar = new JButton("Eliminar");
         JButton btnLimpiar = new JButton("Limpiar");
-        buttons.add(btnLimpiar); buttons.add(btnEditar); buttons.add(btnEliminar); buttons.add(btnNuevo);
-        add(buttons, BorderLayout.SOUTH);
+        panelBotones.add(btnLimpiar);
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnEliminar);
+        panelBotones.add(btnGuardar);
+        add(panelBotones, BorderLayout.SOUTH);
 
-        btnNuevo.addActionListener(e -> guardar());
+        btnGuardar.addActionListener(e -> guardar());
         btnEditar.addActionListener(e -> cargarSeleccion());
         btnEliminar.addActionListener(e -> eliminar());
         btnLimpiar.addActionListener(e -> limpiar());
 
-        refrescar();
+        cargarTipos();
+        refrescarTabla();
     }
-    private void refrescar() {
-        var data = dao.listar();
-        DefaultTableModel model = new DefaultTableModel(new Object[]{"ID","Nombre","Apellido","DNI","Dirección","Teléfono","Email","Tipo"}, 0);
-        for (var c: data) model.addRow(new Object[]{c.getIdCliente(), c.getNombre(), c.getApellido(), c.getDni(), c.getDireccion(), c.getTelefono(), c.getEmail(), c.getIdTipoCliente()});
-        table.setModel(model);
+
+    private void cargarTipos() {
+        cbTipo.removeAllItems();
+        for (TipoCliente tipo : tipoClienteDAO.listar()) {
+            cbTipo.addItem(tipo);
+        }
+        cbTipo.setSelectedIndex(-1);
     }
+
+    private void refrescarTabla() {
+        DefaultTableModel modelo = new DefaultTableModel(
+                new Object[]{"ID", "Nombre", "Apellido", "DNI", "Dirección", "Teléfono", "Email", "Tipo"}, 0);
+
+        for (Cliente cliente : clienteDAO.listar()) {
+            modelo.addRow(new Object[]{
+                    cliente.getIdCliente(),
+                    cliente.getNombre(),
+                    cliente.getApellido(),
+                    cliente.getDni(),
+                    cliente.getDireccion(),
+                    cliente.getTelefono(),
+                    cliente.getEmail(),
+                    cliente.getIdTipoCliente()
+            });
+        }
+        tablaClientes.setModel(modelo);
+    }
+
     private void limpiar() {
-        selectedId = null; txtNombre.setText(""); txtApellido.setText(""); txtDni.setText(""); txtDireccion.setText(""); txtTelefono.setText(""); txtEmail.setText(""); cbTipo.setSelectedIndex(-1);
+        idSeleccionado = null;
+        txtNombre.setText("");
+        txtApellido.setText("");
+        txtDni.setText("");
+        txtDireccion.setText("");
+        txtTelefono.setText("");
+        txtEmail.setText("");
+        cbTipo.setSelectedIndex(-1);
     }
+
     private void guardar() {
-        TipoCliente sel = (TipoCliente) cbTipo.getSelectedItem();
-        Integer idTipo = sel==null? null : sel.getIdTipoCliente();
-        Cliente c = new Cliente(selectedId, txtNombre.getText(), txtApellido.getText(), txtDni.getText(),
-                txtDireccion.getText(), txtTelefono.getText(), txtEmail.getText(), idTipo);
+        TipoCliente seleccionado = (TipoCliente) cbTipo.getSelectedItem();
+        Integer idTipo = seleccionado != null ? seleccionado.getIdTipoCliente() : null;
+
+        Cliente cliente = new Cliente(
+                idSeleccionado,
+                txtNombre.getText(),
+                txtApellido.getText(),
+                txtDni.getText(),
+                txtDireccion.getText(),
+                txtTelefono.getText(),
+                txtEmail.getText(),
+                idTipo);
         try {
-            if (selectedId==null) dao.insertar(c); else dao.actualizar(c);
-            limpiar(); refrescar();
-        } catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
+            if (idSeleccionado == null) {
+                clienteDAO.insertar(cliente);
+            } else {
+                clienteDAO.actualizar(cliente);
+            }
+            limpiar();
+            refrescarTabla();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+
     private void cargarSeleccion() {
-        int row = table.getSelectedRow(); if (row<0) return;
-        selectedId = (Integer) table.getValueAt(row,0);
-        txtNombre.setText(String.valueOf(table.getValueAt(row,1)));
-        txtApellido.setText(String.valueOf(table.getValueAt(row,2)));
-        txtDni.setText(String.valueOf(table.getValueAt(row,3)));
-        txtDireccion.setText(String.valueOf(table.getValueAt(row,4)));
-        txtTelefono.setText(String.valueOf(table.getValueAt(row,5)));
-        txtEmail.setText(String.valueOf(table.getValueAt(row,6)));
+        int fila = tablaClientes.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        idSeleccionado = (Integer) tablaClientes.getValueAt(fila, 0);
+        txtNombre.setText(String.valueOf(tablaClientes.getValueAt(fila, 1)));
+        txtApellido.setText(String.valueOf(tablaClientes.getValueAt(fila, 2)));
+        txtDni.setText(String.valueOf(tablaClientes.getValueAt(fila, 3)));
+        txtDireccion.setText(String.valueOf(tablaClientes.getValueAt(fila, 4)));
+        txtTelefono.setText(String.valueOf(tablaClientes.getValueAt(fila, 5)));
+        txtEmail.setText(String.valueOf(tablaClientes.getValueAt(fila, 6)));
+
+        Integer idTipo = (Integer) tablaClientes.getValueAt(fila, 7);
+        if (idTipo != null) {
+            for (int i = 0; i < cbTipo.getItemCount(); i++) {
+                TipoCliente item = cbTipo.getItemAt(i);
+                if (item != null && idTipo.equals(item.getIdTipoCliente())) {
+                    cbTipo.setSelectedIndex(i);
+                    break;
+                }
+            }
+        } else {
+            cbTipo.setSelectedIndex(-1);
+        }
     }
+
     private void eliminar() {
-        int row = table.getSelectedRow(); if (row<0) return;
-        int id = (Integer) table.getValueAt(row,0);
-        if (JOptionPane.showConfirmDialog(this, "¿Eliminar cliente "+id+"?", "Confirmar", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
-            try { dao.eliminar(id); refrescar(); } catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); }
+        int fila = tablaClientes.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Integer id = (Integer) tablaClientes.getValueAt(fila, 0);
+        if (id == null) {
+            return;
+        }
+
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar cliente " + id + "?",
+                "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                clienteDAO.eliminar(id);
+                limpiar();
+                refrescarTabla();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

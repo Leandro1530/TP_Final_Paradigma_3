@@ -1,59 +1,127 @@
-package com.yovani.ventas.ui.entities;
+package VentasDAO.UI.entities;
 
-import com.yovani.ventas.dao.CategoriaDAO;
-import com.yovani.ventas.model.Categoria;
+import VentasDAO.DAO.CategoriaDAO;
+import VentasDAO.Objetos.Categoria;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
 
+/**
+ * ABM básico para {@link Categoria}.
+ */
 public class CategoriaFrame extends JDialog {
-    private final CategoriaDAO dao = new CategoriaDAO();
-    private JTable table; private JTextField txtNombre, txtDesc; private Integer selId;
 
-    public CategoriaFrame(Window owner) {
+    private final CategoriaDAO categoriaDAO = new CategoriaDAO();
+
+    private final JTable tabla = new JTable();
+    private final JTextField txtNombre = new JTextField();
+    private final JTextField txtDescripcion = new JTextField();
+    private Integer idSeleccionado;
+
+    public CategoriaFrame(java.awt.Window owner) {
         super(owner, "Categorías", ModalityType.APPLICATION_MODAL);
-        setSize(760,460); setLocationRelativeTo(owner); setLayout(new BorderLayout());
+        setSize(720, 420);
+        setLocationRelativeTo(owner);
+        setLayout(new BorderLayout());
 
-        JPanel form = new JPanel(new GridLayout(1,4,8,8));
-        txtNombre = new JTextField(); txtDesc = new JTextField();
-        form.add(new JLabel("Nombre:")); form.add(txtNombre);
-        form.add(new JLabel("Descripción:")); form.add(txtDesc);
-        add(form, BorderLayout.NORTH);
+        JPanel panelFormulario = new JPanel(new GridLayout(1, 4, 8, 8));
+        panelFormulario.add(new JLabel("Nombre:"));
+        panelFormulario.add(txtNombre);
+        panelFormulario.add(new JLabel("Descripción:"));
+        panelFormulario.add(txtDescripcion);
+        add(panelFormulario, BorderLayout.NORTH);
 
-        table = new JTable(); add(new JScrollPane(table), BorderLayout.CENTER);
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton bSave = new JButton("Guardar/Nuevo");
-        JButton bEdit = new JButton("Editar");
-        JButton bDel = new JButton("Eliminar");
-        buttons.add(bEdit); buttons.add(bDel); buttons.add(bSave);
-        add(buttons, BorderLayout.SOUTH);
+        add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        bSave.addActionListener(e -> save()); bEdit.addActionListener(e -> edit()); bDel.addActionListener(e -> deleteRow());
-        refresh();
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnEditar = new JButton("Editar");
+        JButton btnEliminar = new JButton("Eliminar");
+        JButton btnLimpiar = new JButton("Limpiar");
+        panelBotones.add(btnLimpiar);
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnEliminar);
+        panelBotones.add(btnGuardar);
+        add(panelBotones, BorderLayout.SOUTH);
+
+        btnGuardar.addActionListener(e -> guardar());
+        btnEditar.addActionListener(e -> cargarSeleccion());
+        btnEliminar.addActionListener(e -> eliminar());
+        btnLimpiar.addActionListener(e -> limpiar());
+
+        refrescarTabla();
     }
-    private void refresh() {
-        DefaultTableModel m = new DefaultTableModel(new Object[]{"ID","Nombre","Descripción"},0);
-        for (var c: dao.listar()) m.addRow(new Object[]{c.getIdCategoria(), c.getNombre(), c.getDescripcion()});
-        table.setModel(m);
+
+    private void refrescarTabla() {
+        DefaultTableModel modelo = new DefaultTableModel(new Object[]{"ID", "Nombre", "Descripción"}, 0);
+        for (Categoria categoria : categoriaDAO.listar()) {
+            modelo.addRow(new Object[]{categoria.getIdCategoria(), categoria.getNombre(), categoria.getDescripcion()});
+        }
+        tabla.setModel(modelo);
     }
-    private void save() {
-        Categoria c = new Categoria(selId, txtNombre.getText(), txtDesc.getText());
-        try { if (selId==null) dao.insertar(c); else dao.actualizar(c); selId=null; txtNombre.setText(""); txtDesc.setText(""); refresh(); }
-        catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
+
+    private void limpiar() {
+        idSeleccionado = null;
+        txtNombre.setText("");
+        txtDescripcion.setText("");
     }
-    private void edit() {
-        int r = table.getSelectedRow(); if (r<0) return;
-        selId = (Integer) table.getValueAt(r,0);
-        txtNombre.setText(String.valueOf(table.getValueAt(r,1)));
-        txtDesc.setText(String.valueOf(table.getValueAt(r,2)));
+
+    private void guardar() {
+        Categoria categoria = new Categoria(idSeleccionado, txtNombre.getText(), txtDescripcion.getText());
+        try {
+            if (idSeleccionado == null) {
+                categoriaDAO.insertar(categoria);
+            } else {
+                categoriaDAO.actualizar(categoria);
+            }
+            limpiar();
+            refrescarTabla();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
-    private void deleteRow() {
-        int r = table.getSelectedRow(); if (r<0) return;
-        int id = (Integer) table.getValueAt(r,0);
-        if (JOptionPane.showConfirmDialog(this, "Eliminar categoría "+id+"?", "Confirmar", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
-            try { dao.eliminar(id); refresh(); } catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
+
+    private void cargarSeleccion() {
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        idSeleccionado = (Integer) tabla.getValueAt(fila, 0);
+        txtNombre.setText(String.valueOf(tabla.getValueAt(fila, 1)));
+        txtDescripcion.setText(String.valueOf(tabla.getValueAt(fila, 2)));
+    }
+
+    private void eliminar() {
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Integer id = (Integer) tabla.getValueAt(fila, 0);
+        if (id == null) {
+            return;
+        }
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar categoría " + id + "?",
+                "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                categoriaDAO.eliminar(id);
+                limpiar();
+                refrescarTabla();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

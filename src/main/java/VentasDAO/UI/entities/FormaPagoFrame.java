@@ -1,59 +1,127 @@
-package com.yovani.ventas.ui.entities;
+package VentasDAO.UI.entities;
 
-import com.yovani.ventas.dao.FormaPagoDAO;
-import com.yovani.ventas.model.FormaPago;
+import VentasDAO.DAO.FormaPagoDAO;
+import VentasDAO.Objetos.FormaPago;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.sql.SQLException;
 
+/**
+ * ABM básico para {@link FormaPago}.
+ */
 public class FormaPagoFrame extends JDialog {
-    private final FormaPagoDAO dao = new FormaPagoDAO();
-    private JTable table; private JTextField txtNombre, txtDesc; private Integer selId;
 
-    public FormaPagoFrame(Window owner) {
+    private final FormaPagoDAO formaPagoDAO = new FormaPagoDAO();
+
+    private final JTable tabla = new JTable();
+    private final JTextField txtNombre = new JTextField();
+    private final JTextField txtDescripcion = new JTextField();
+    private int idSeleccionado = 0; // Cambiado a int primitivo, 0 = no seleccionado
+
+    public FormaPagoFrame(java.awt.Window owner) {
         super(owner, "Formas de Pago", ModalityType.APPLICATION_MODAL);
-        setSize(700,420); setLocationRelativeTo(owner); setLayout(new BorderLayout());
+        setSize(700, 420);
+        setLocationRelativeTo(owner);
+        setLayout(new BorderLayout());
 
-        JPanel form = new JPanel(new GridLayout(1,4,8,8));
-        txtNombre = new JTextField(); txtDesc = new JTextField();
-        form.add(new JLabel("Nombre:")); form.add(txtNombre);
-        form.add(new JLabel("Descripción:")); form.add(txtDesc);
-        add(form, BorderLayout.NORTH);
+        JPanel panelFormulario = new JPanel(new GridLayout(1, 4, 8, 8));
+        panelFormulario.add(new JLabel("Nombre:"));
+        panelFormulario.add(txtNombre);
+        panelFormulario.add(new JLabel("Descripción:"));
+        panelFormulario.add(txtDescripcion);
+        add(panelFormulario, BorderLayout.NORTH);
 
-        table = new JTable(); add(new JScrollPane(table), BorderLayout.CENTER);
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton bSave = new JButton("Guardar/Nuevo");
-        JButton bEdit = new JButton("Editar");
-        JButton bDel = new JButton("Eliminar");
-        buttons.add(bEdit); buttons.add(bDel); buttons.add(bSave);
-        add(buttons, BorderLayout.SOUTH);
+        add(new JScrollPane(tabla), BorderLayout.CENTER);
 
-        bSave.addActionListener(e -> save()); bEdit.addActionListener(e -> edit()); bDel.addActionListener(e -> deleteRow());
-        refresh();
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnEditar = new JButton("Editar");
+        JButton btnEliminar = new JButton("Eliminar");
+        JButton btnLimpiar = new JButton("Limpiar");
+        panelBotones.add(btnLimpiar);
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnEliminar);
+        panelBotones.add(btnGuardar);
+        add(panelBotones, BorderLayout.SOUTH);
+
+        btnGuardar.addActionListener(e -> guardar());
+        btnEditar.addActionListener(e -> cargarSeleccion());
+        btnEliminar.addActionListener(e -> eliminar());
+        btnLimpiar.addActionListener(e -> limpiar());
+
+        refrescarTabla();
     }
-    private void refresh() {
-        DefaultTableModel m = new DefaultTableModel(new Object[]{"ID","Nombre","Descripción"},0);
-        for (var f: dao.listar()) m.addRow(new Object[]{f.getIdFormaPago(), f.getNombre(), f.getDescripcion()});
-        table.setModel(m);
+
+    private void refrescarTabla() {
+        DefaultTableModel modelo = new DefaultTableModel(new Object[]{"ID", "Nombre", "Descripción"}, 0);
+        for (FormaPago formaPago : formaPagoDAO.listar()) {
+            modelo.addRow(new Object[]{formaPago.getIdFormaPago(), formaPago.getNombre(), formaPago.getDescripcion()});
+        }
+        tabla.setModel(modelo);
     }
-    private void save() {
-        FormaPago f = new FormaPago(selId, txtNombre.getText(), txtDesc.getText());
-        try { if (selId==null) dao.insertar(f); else dao.actualizar(f); selId=null; txtNombre.setText(""); txtDesc.setText(""); refresh(); }
-        catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
+
+    private void limpiar() {
+        idSeleccionado = 0; // 0 indica que no hay selección
+        txtNombre.setText("");
+        txtDescripcion.setText("");
     }
-    private void edit() {
-        int r = table.getSelectedRow(); if (r<0) return;
-        selId = (Integer) table.getValueAt(r,0);
-        txtNombre.setText(String.valueOf(table.getValueAt(r,1)));
-        txtDesc.setText(String.valueOf(table.getValueAt(r,2)));
+
+    private void guardar() {
+        FormaPago formaPago = new FormaPago(idSeleccionado, txtNombre.getText(), txtDescripcion.getText());
+        try {
+            if (idSeleccionado == 0) { // Si es 0, es inserción
+                formaPagoDAO.insertar(formaPago);
+            } else {
+                formaPagoDAO.actualizar(formaPago);
+            }
+            limpiar();
+            refrescarTabla();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
-    private void deleteRow() {
-        int r = table.getSelectedRow(); if (r<0) return;
-        int id = (Integer) table.getValueAt(r,0);
-        if (JOptionPane.showConfirmDialog(this, "Eliminar forma pago "+id+"?", "Confirmar", JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
-            try { dao.eliminar(id); refresh(); } catch (SQLException ex) { JOptionPane.showMessageDialog(this, ex.getMessage()); }
+
+    private void cargarSeleccion() {
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        idSeleccionado = (Integer) tabla.getValueAt(fila, 0); // Cast seguro desde tabla
+        txtNombre.setText(String.valueOf(tabla.getValueAt(fila, 1)));
+        txtDescripcion.setText(String.valueOf(tabla.getValueAt(fila, 2)));
+    }
+
+    private void eliminar() {
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            return;
+        }
+        Integer id = (Integer) tabla.getValueAt(fila, 0);
+        if (id == null || id == 0) { // Validación adicional
+            return;
+        }
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "¿Eliminar forma de pago " + id + "?",
+                "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opcion == JOptionPane.YES_OPTION) {
+            try {
+                formaPagoDAO.eliminar(id); // Pasa int directamente
+                limpiar();
+                refrescarTabla();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

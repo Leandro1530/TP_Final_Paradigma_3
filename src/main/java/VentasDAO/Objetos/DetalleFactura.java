@@ -1,4 +1,4 @@
-package Objetos;
+package VentasDAO.Objetos;
 
 public class DetalleFactura {
 

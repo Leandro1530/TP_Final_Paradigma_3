@@ -1,9 +1,12 @@
-package Objetos;
+package VentasDAO.Objetos;
 
 public class TipoCliente {
     private int idTipoCliente;
     private String nombre;
     private String descripcion;
+
+    public TipoCliente() {
+    }
 
     public TipoCliente(int idTipoCliente, String nombre, String descripcion) {
         this.idTipoCliente = idTipoCliente;
@@ -33,5 +36,10 @@ public class TipoCliente {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    @Override
+    public String toString() {
+        return nombre != null ? nombre : "Tipo";
     }
 }

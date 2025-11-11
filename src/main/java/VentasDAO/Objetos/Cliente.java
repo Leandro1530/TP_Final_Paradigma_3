@@ -1,23 +1,46 @@
-package Objetos;
+package VentasDAO.Objetos;
 
+/**
+ * Entidad que representa a la tabla {@code cliente}.
+ */
 public class Cliente {
-    private int idCliente;
+
+    private Integer idCliente;
     private String nombre;
     private String apellido;
     private String dni;
     private String direccion;
     private String telefono;
     private String email;
-    private TipoCliente tipoCliente;
+    // NOT NULL en la BD: el DAO debe validar antes de insertar/actualizar.
+    private Integer idTipoCliente;
 
     public Cliente() {
     }
 
-    public int getIdCliente() {
+    public Cliente(Integer idCliente,
+                   String nombre,
+                   String apellido,
+                   String dni,
+                   String direccion,
+                   String telefono,
+                   String email,
+                   Integer idTipoCliente) {
+        this.idCliente = idCliente;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.dni = dni;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        this.email = email;
+        this.idTipoCliente = idTipoCliente;
+    }
+
+    public Integer getIdCliente() {
         return idCliente;
     }
 
-    public void setIdCliente(int idCliente) {
+    public void setIdCliente(Integer idCliente) {
         this.idCliente = idCliente;
     }
 
@@ -69,11 +92,11 @@ public class Cliente {
         this.email = email;
     }
 
-    public TipoCliente getTipoCliente() {
-        return tipoCliente;
+    public Integer getIdTipoCliente() {
+        return idTipoCliente;
     }
 
-    public void setTipoCliente(TipoCliente tipoCliente) {
-        this.tipoCliente = tipoCliente;
+    public void setIdTipoCliente(Integer idTipoCliente) {
+        this.idTipoCliente = idTipoCliente;
     }
 }
