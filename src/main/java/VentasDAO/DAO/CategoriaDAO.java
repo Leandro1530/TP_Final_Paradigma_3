@@ -1,4 +1,4 @@
-package com.yovani.ventas.dao;
+package VentasDAO.DAO;
 import com.yovani.ventas.db.ConexionDB; import com.yovani.ventas.model.Categoria; import java.sql.*; import java.util.*;
 public class CategoriaDAO {
     public List<Categoria> listar() {

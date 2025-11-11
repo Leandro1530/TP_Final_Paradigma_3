@@ -1,4 +1,4 @@
-package Conexion;
+package VentasDAO.Conexion;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
