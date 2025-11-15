@@ -6,8 +6,6 @@ import java.util.List;
 public class Factura {
     private int idFactura;
     private String numeroFactura;
-    private int idCliente;
-    private int idFormaPago;
     private Date fechaGeneracion;
     private float total;
     private String observaciones;
@@ -16,11 +14,9 @@ public class Factura {
     private List<DetalleFactura> detallefactura;
 
 
-    public Factura(int idFactura, String numeroFactura, int idCliente, int idFormaPago, Date fechaGeneracion, float total, String observaciones, Cliente cliente, FormaPago formapago, List<DetalleFactura> detallefactura) {
+    public Factura(int idFactura, String numeroFactura, Date fechaGeneracion, float total, String observaciones, Cliente cliente, FormaPago formapago, List<DetalleFactura> detallefactura) {
         this.idFactura = idFactura;
         this.numeroFactura = numeroFactura;
-        this.idCliente = idCliente;
-        this.idFormaPago = idFormaPago;
         this.fechaGeneracion = fechaGeneracion;
         this.total = total;
         this.observaciones = observaciones;
@@ -28,6 +24,7 @@ public class Factura {
         this.formapago = formapago;
         this.detallefactura = detallefactura;
     }
+
 
     public int getIdFactura() {
         return idFactura;
@@ -43,22 +40,6 @@ public class Factura {
 
     public void setNumeroFactura(String numeroFactura) {
         this.numeroFactura = numeroFactura;
-    }
-
-    public int getIdCliente() {
-        return idCliente;
-    }
-
-    public void setIdCliente(int idCliente) {
-        this.idCliente = idCliente;
-    }
-
-    public int getIdFormaPago() {
-        return idFormaPago;
-    }
-
-    public void setIdFormaPago(int idFormaPago) {
-        this.idFormaPago = idFormaPago;
     }
 
     public Date getFechaGeneracion() {

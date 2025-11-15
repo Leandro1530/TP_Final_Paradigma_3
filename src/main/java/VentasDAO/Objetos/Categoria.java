@@ -5,7 +5,7 @@ package VentasDAO.Objetos;
  */
 public class Categoria {
 
-    private Integer idCategoria;
+    private int idCategoria;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String nombre;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
@@ -14,17 +14,17 @@ public class Categoria {
     public Categoria() {
     }
 
-    public Categoria(Integer idCategoria, String nombre, String descripcion) {
+    public Categoria(int idCategoria, String nombre, String descripcion) {
         this.idCategoria = idCategoria;
         this.nombre = nombre;
         this.descripcion = descripcion;
     }
 
-    public Integer getIdCategoria() {
+    public int getIdCategoria() {
         return idCategoria;
     }
 
-    public void setIdCategoria(Integer idCategoria) {
+    public void setIdCategoria(int idCategoria) {
         this.idCategoria = idCategoria;
     }
 

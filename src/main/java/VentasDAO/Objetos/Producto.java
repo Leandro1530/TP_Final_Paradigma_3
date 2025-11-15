@@ -7,7 +7,7 @@ import java.math.BigDecimal;
  */
 public class Producto {
 
-    private Integer idProducto;
+    private int idProducto;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String nombre;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
@@ -15,32 +15,28 @@ public class Producto {
     // NOT NULL en la BD: validar antes de insertar/actualizar.
     private BigDecimal precio;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
-    private Integer stock;
+    private int stock;
     // NOT NULL en la BD: validar antes de insertar/actualizar.
-    private Integer idCategoria;
+    private Categoria categoria;
 
     public Producto() {
     }
 
-    public Producto(Integer idProducto,
-                    String nombre,
-                    String descripcion,
-                    BigDecimal precio,
-                    Integer stock,
-                    Integer idCategoria) {
+    public Producto(int idProducto, String nombre, String descripcion, BigDecimal precio, int stock, Categoria categoria) {
         this.idProducto = idProducto;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.stock = stock;
-        this.idCategoria = idCategoria;
+        this.categoria = categoria;
     }
 
-    public Integer getIdProducto() {
+
+    public int getIdProducto() {
         return idProducto;
     }
 
-    public void setIdProducto(Integer idProducto) {
+    public void setIdProducto(int idProducto) {
         this.idProducto = idProducto;
     }
 
@@ -68,21 +64,22 @@ public class Producto {
         this.precio = precio;
     }
 
-    public Integer getStock() {
+    public int getStock() {
         return stock;
     }
 
-    public void setStock(Integer stock) {
+    public void setStock(int stock) {
         this.stock = stock;
     }
 
-    public Integer getIdCategoria() {
-        return idCategoria;
+    public Categoria getCategoria() {
+        return categoria;
     }
 
-    public void setIdCategoria(Integer idCategoria) {
-        this.idCategoria = idCategoria;
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
+
 
     @Override
     public String toString() {

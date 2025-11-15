@@ -5,7 +5,7 @@ package VentasDAO.Objetos;
  */
 public class Cliente {
 
-    private Integer idCliente;
+    private int idCliente;
     private String nombre;
     private String apellido;
     private String dni;
@@ -13,19 +13,12 @@ public class Cliente {
     private String telefono;
     private String email;
     // NOT NULL en la BD: el DAO debe validar antes de insertar/actualizar.
-    private Integer idTipoCliente;
+    private TipoCliente tipoCliente;
 
     public Cliente() {
     }
 
-    public Cliente(Integer idCliente,
-                   String nombre,
-                   String apellido,
-                   String dni,
-                   String direccion,
-                   String telefono,
-                   String email,
-                   Integer idTipoCliente) {
+    public Cliente(Integer idCliente, String nombre, String apellido, String dni, String direccion, String telefono, String email, TipoCliente tipoCliente) {
         this.idCliente = idCliente;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -33,8 +26,10 @@ public class Cliente {
         this.direccion = direccion;
         this.telefono = telefono;
         this.email = email;
-        this.idTipoCliente = idTipoCliente;
+        this.tipoCliente = tipoCliente;
     }
+
+
 
     public Integer getIdCliente() {
         return idCliente;
@@ -92,11 +87,13 @@ public class Cliente {
         this.email = email;
     }
 
-    public Integer getIdTipoCliente() {
-        return idTipoCliente;
+    public TipoCliente getTipoCliente() {
+        return tipoCliente;
     }
 
-    public void setIdTipoCliente(Integer idTipoCliente) {
-        this.idTipoCliente = idTipoCliente;
+    public void setTipoCliente(TipoCliente tipoCliente) {
+        this.tipoCliente = tipoCliente;
     }
+
+
 }
