@@ -61,6 +61,11 @@ public class DetalleFactura {
     }
 
     public int getIdProducto() {
-        return 0;
+        // Devuelve el ID del producto si existe, sino 0
+        return (producto != null) ? producto.getIdProducto() : 0;
+    }
+
+    public boolean tieneProductoValido() {
+        return producto != null && producto.getIdProducto() > 0;
     }
 }

@@ -131,10 +131,11 @@ public class DetalleFacturaFrame extends JDialog {
         btnLimpiar.addActionListener(e -> limpiar());
         cbProducto.addActionListener(e -> completarPrecioDesdeProducto());
 
-        configurarRenderers();
+        // ✅ ORDEN CORRECTO: Primero configurar combos, luego cargar datos,
+        // y finalmente refrescar tabla (que asigna el modelo y configura renderers)
         configurarCombos();
         cargarCombos();
-        refrescarTabla();
+        refrescarTabla();  // Esto ahora configura el modelo Y los renderers
 
         pack();
     }
@@ -169,7 +170,13 @@ public class DetalleFacturaFrame extends JDialog {
         };
     }
 
+    // ✅ MÉTODO MOVIDO: Ahora se llama desde refrescarTabla() DESPUÉS de asignar el modelo
     private void configurarRenderers() {
+        // Verificar que la tabla tiene modelo y columnas
+        if (tabla.getModel() == null || tabla.getColumnCount() == 0) {
+            return;
+        }
+
         tabla.setDefaultRenderer(Factura.class, new DefaultTableCellRenderer() {
             @Override
             protected void setValue(Object value) {
@@ -204,9 +211,17 @@ public class DetalleFacturaFrame extends JDialog {
 
         DefaultTableCellRenderer derecha = new DefaultTableCellRenderer();
         derecha.setHorizontalAlignment(SwingConstants.RIGHT);
-        tabla.getColumnModel().getColumn(3).setCellRenderer(derecha);
-        tabla.getColumnModel().getColumn(4).setCellRenderer(derecha);
-        tabla.getColumnModel().getColumn(5).setCellRenderer(derecha);
+
+        // ✅ AHORA SÍ hay columnas disponibles
+        if (tabla.getColumnCount() > 3) {
+            tabla.getColumnModel().getColumn(3).setCellRenderer(derecha);
+        }
+        if (tabla.getColumnCount() > 4) {
+            tabla.getColumnModel().getColumn(4).setCellRenderer(derecha);
+        }
+        if (tabla.getColumnCount() > 5) {
+            tabla.getColumnModel().getColumn(5).setCellRenderer(derecha);
+        }
     }
 
     private void configurarCombos() {
@@ -291,6 +306,9 @@ public class DetalleFacturaFrame extends JDialog {
             });
         }
         tabla.setModel(modelo);
+
+        // ✅ AHORA configuramos los renderers DESPUÉS de asignar el modelo
+        configurarRenderers();
     }
 
     private void limpiar() {

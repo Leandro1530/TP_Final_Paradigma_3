@@ -59,12 +59,24 @@ public class FacturaDAO implements IFacturaDAO {
                     idFactura = rs.getInt(1);
                 }
 
+                // ✅ CORRECCIÓN: Validar y usar el producto correctamente
                 try (PreparedStatement psDetalle = cn.prepareStatement(sqlDetalle)) {
                     for (DetalleFactura detalle : detalles) {
+                        // Validar que el producto existe y tiene ID válido
+                        if (detalle.getProducto() == null) {
+                            throw new SQLException("Detalle sin producto asociado");
+                        }
+
+                        int idProducto = detalle.getProducto().getIdProducto();
+                        if (idProducto <= 0) {
+                            throw new SQLException("ID de producto inválido: " + idProducto);
+                        }
+
                         psDetalle.setInt(1, idFactura);
-                        psDetalle.setInt(2, detalle.getIdProducto());
+                        psDetalle.setInt(2, idProducto); // ✅ Usar el ID del producto correctamente
                         psDetalle.setInt(3, detalle.getCantidad());
                         psDetalle.setFloat(4, detalle.getPrecioUnitario());
+
                         float subtotal = detalle.getSubtotal();
                         if (subtotal == 0) {
                             subtotal = detalle.getPrecioUnitario() * detalle.getCantidad();
@@ -168,7 +180,7 @@ public class FacturaDAO implements IFacturaDAO {
             throw new SQLException("Los detalles no pueden ser nulos");
         }
         if (detalle.getProducto() == null || detalle.getProducto().getIdProducto() <= 0) {
-            throw new SQLException("Cada detalle debe tener un producto asociado");
+            throw new SQLException("Cada detalle debe tener un producto asociado válido");
         }
         int cantidad = detalle.getCantidad();
         if (cantidad <= 0) {

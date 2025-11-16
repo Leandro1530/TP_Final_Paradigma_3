@@ -29,7 +29,6 @@ public class Factura {
 
     }
 
-
     public int getIdFactura() {
         return idFactura;
     }
