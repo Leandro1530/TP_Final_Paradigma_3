@@ -25,6 +25,10 @@ public class Factura {
         this.detallefactura = detallefactura;
     }
 
+    public Factura() {
+
+    }
+
 
     public int getIdFactura() {
         return idFactura;

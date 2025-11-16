@@ -31,6 +31,7 @@ public class MainFrame extends JFrame {
         JButton btnCategorias = new JButton("Categorías");
         JButton btnTipos = new JButton("Tipos");
         JButton btnPagos = new JButton("Formas de pago");
+        JButton btnDetalles = new JButton("Detalles");
         JButton btnFacturas = new JButton("Facturas");
 
         toolbar.add(btnClientes);
@@ -38,6 +39,7 @@ public class MainFrame extends JFrame {
         toolbar.add(btnCategorias);
         toolbar.add(btnTipos);
         toolbar.add(btnPagos);
+        toolbar.add(btnDetalles);
         toolbar.addSeparator();
         toolbar.add(btnFacturas);
         add(toolbar, BorderLayout.NORTH);
@@ -65,6 +67,7 @@ public class MainFrame extends JFrame {
         btnCategorias.addActionListener(e -> new CategoriaFrame(this).setVisible(true));
         btnTipos.addActionListener(e -> new TipoClienteFrame(this).setVisible(true));
         btnPagos.addActionListener(e -> new FormaPagoFrame(this).setVisible(true));
+        btnDetalles.addActionListener(e -> new DetalleFacturaFrame(this).setVisible(true));
         btnFacturas.addActionListener(e -> new FacturaFrame(this).setVisible(true));
     }
 }

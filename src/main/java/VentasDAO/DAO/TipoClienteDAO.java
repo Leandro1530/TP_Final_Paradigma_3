@@ -1,6 +1,7 @@
 package VentasDAO.DAO;
 
 import VentasDAO.Conexion.ConexionDB;
+import VentasDAO.Interfaz.ITipoClienteDAO;
 import VentasDAO.Objetos.TipoCliente;
 
 import java.sql.Connection;
@@ -13,8 +14,9 @@ import java.util.List;
 /**
  * DAO para la tabla {@code tipo_cliente}.
  */
-public class TipoClienteDAO {
+public class TipoClienteDAO implements ITipoClienteDAO {
 
+    @Override
     public List<TipoCliente> listar() {
         List<TipoCliente> tipos = new ArrayList<>();
         String sql = "SELECT id_tipo_cliente, nombre, descripcion FROM tipo_cliente ORDER BY id_tipo_cliente";
@@ -25,7 +27,7 @@ public class TipoClienteDAO {
 
             while (rs.next()) {
                 tipos.add(new TipoCliente(
-                        rs.getInt("id_tipo_cliente"), // int primitivo
+                        rs.getInt("id_tipo_cliente"),
                         rs.getString("nombre"),
                         rs.getString("descripcion")));
             }
@@ -35,7 +37,9 @@ public class TipoClienteDAO {
         return tipos;
     }
 
+    @Override
     public void insertar(TipoCliente tipoCliente) throws SQLException {
+        validar(tipoCliente);
         String sql = "INSERT INTO tipo_cliente(nombre, descripcion) VALUES(?, ?)";
 
         try (Connection cn = ConexionDB.getConnection();
@@ -47,10 +51,12 @@ public class TipoClienteDAO {
         }
     }
 
+    @Override
     public void actualizar(TipoCliente tipoCliente) throws SQLException {
-        if (tipoCliente.getIdTipoCliente() == 0) { // Validar int primitivo
+        if (tipoCliente.getIdTipoCliente() <= 0) {
             throw new SQLException("El id del tipo de cliente es obligatorio para actualizar");
         }
+        validar(tipoCliente);
 
         String sql = "UPDATE tipo_cliente SET nombre = ?, descripcion = ? WHERE id_tipo_cliente = ?";
 
@@ -59,13 +65,14 @@ public class TipoClienteDAO {
 
             ps.setString(1, tipoCliente.getNombre());
             ps.setString(2, tipoCliente.getDescripcion());
-            ps.setInt(3, tipoCliente.getIdTipoCliente()); // int primitivo
+            ps.setInt(3, tipoCliente.getIdTipoCliente());
             ps.executeUpdate();
         }
     }
 
-    public void eliminar(int idTipoCliente) throws SQLException { // Cambiado a int primitivo
-        if (idTipoCliente == 0) { // Validar int primitivo
+    @Override
+    public void eliminar(Integer idTipoCliente) throws SQLException {
+        if (idTipoCliente == null || idTipoCliente <= 0) {
             throw new SQLException("El id del tipo de cliente es obligatorio para eliminar");
         }
 
@@ -77,5 +84,18 @@ public class TipoClienteDAO {
             ps.setInt(1, idTipoCliente);
             ps.executeUpdate();
         }
+    }
+
+    private void validar(TipoCliente tipoCliente) throws SQLException {
+        if (tipoCliente == null) {
+            throw new SQLException("Debe proporcionar el tipo de cliente");
+        }
+        if (estaVacio(tipoCliente.getNombre())) {
+            throw new SQLException("El nombre del tipo de cliente es obligatorio");
+        }
+    }
+
+    private boolean estaVacio(String valor) {
+        return valor == null || valor.trim().isEmpty();
     }
 }

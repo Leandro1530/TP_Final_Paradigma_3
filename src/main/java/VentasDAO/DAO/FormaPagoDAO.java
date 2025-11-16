@@ -1,6 +1,7 @@
 package VentasDAO.DAO;
 
 import VentasDAO.Conexion.ConexionDB;
+import VentasDAO.Interfaz.IFormaPagoDAO;
 import VentasDAO.Objetos.FormaPago;
 
 import java.sql.Connection;
@@ -13,8 +14,9 @@ import java.util.List;
 /**
  * DAO para operaciones sobre la tabla {@code forma_pago}.
  */
-public class FormaPagoDAO {
+public class FormaPagoDAO implements IFormaPagoDAO {
 
+    @Override
     public List<FormaPago> listar() {
         List<FormaPago> formas = new ArrayList<>();
         String sql = "SELECT id_forma_pago, nombre, descripcion FROM forma_pago ORDER BY id_forma_pago";
@@ -25,7 +27,7 @@ public class FormaPagoDAO {
 
             while (rs.next()) {
                 formas.add(new FormaPago(
-                        rs.getInt("id_forma_pago"), // int primitivo
+                        rs.getInt("id_forma_pago"),
                         rs.getString("nombre"),
                         rs.getString("descripcion")));
             }
@@ -35,7 +37,9 @@ public class FormaPagoDAO {
         return formas;
     }
 
+    @Override
     public void insertar(FormaPago formaPago) throws SQLException {
+        validar(formaPago);
         String sql = "INSERT INTO forma_pago(nombre, descripcion) VALUES(?, ?)";
 
         try (Connection cn = ConexionDB.getConnection();
@@ -47,10 +51,12 @@ public class FormaPagoDAO {
         }
     }
 
+    @Override
     public void actualizar(FormaPago formaPago) throws SQLException {
-        if (formaPago.getIdFormaPago() == 0) { // Validar int primitivo
+        if (formaPago.getIdFormaPago() <= 0) {
             throw new SQLException("El id de la forma de pago es obligatorio para actualizar");
         }
+        validar(formaPago);
 
         String sql = "UPDATE forma_pago SET nombre = ?, descripcion = ? WHERE id_forma_pago = ?";
 
@@ -59,13 +65,14 @@ public class FormaPagoDAO {
 
             ps.setString(1, formaPago.getNombre());
             ps.setString(2, formaPago.getDescripcion());
-            ps.setInt(3, formaPago.getIdFormaPago()); // int primitivo
+            ps.setInt(3, formaPago.getIdFormaPago());
             ps.executeUpdate();
         }
     }
 
-    public void eliminar(int idFormaPago) throws SQLException { // Cambiado a int primitivo
-        if (idFormaPago == 0) { // Validar int primitivo
+    @Override
+    public void eliminar(Integer idFormaPago) throws SQLException {
+        if (idFormaPago == null || idFormaPago <= 0) {
             throw new SQLException("El id de la forma de pago es obligatorio para eliminar");
         }
 
@@ -77,5 +84,21 @@ public class FormaPagoDAO {
             ps.setInt(1, idFormaPago);
             ps.executeUpdate();
         }
+    }
+
+    private void validar(FormaPago formaPago) throws SQLException {
+        if (formaPago == null) {
+            throw new SQLException("Debe proporcionar la forma de pago");
+        }
+        if (estaVacio(formaPago.getNombre())) {
+            throw new SQLException("El nombre de la forma de pago es obligatorio");
+        }
+        if (estaVacio(formaPago.getDescripcion())) {
+            throw new SQLException("La descripción de la forma de pago es obligatoria");
+        }
+    }
+
+    private boolean estaVacio(String valor) {
+        return valor == null || valor.trim().isEmpty();
     }
 }

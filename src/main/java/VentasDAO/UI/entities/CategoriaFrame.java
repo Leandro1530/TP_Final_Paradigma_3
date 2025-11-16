@@ -78,7 +78,14 @@ public class CategoriaFrame extends JDialog {
     }
 
     private void guardar() {
-        Categoria categoria = new Categoria(idSeleccionado, txtNombre.getText(), txtDescripcion.getText());
+        if (txtNombre.getText().trim().isEmpty() || txtDescripcion.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nombre y descripción son obligatorios", "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Categoria categoria = new Categoria();
+        categoria.setIdCategoria(idSeleccionado != null ? idSeleccionado : 0);
+        categoria.setNombre(txtNombre.getText().trim());
+        categoria.setDescripcion(txtDescripcion.getText().trim());
         try {
             if (idSeleccionado == null) {
                 categoriaDAO.insertar(categoria);

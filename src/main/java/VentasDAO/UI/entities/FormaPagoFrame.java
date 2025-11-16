@@ -27,7 +27,7 @@ public class FormaPagoFrame extends JDialog {
     private final JTable tabla = new JTable();
     private final JTextField txtNombre = new JTextField();
     private final JTextField txtDescripcion = new JTextField();
-    private int idSeleccionado = 0; // Cambiado a int primitivo, 0 = no seleccionado
+    private Integer idSeleccionado;
 
     public FormaPagoFrame(java.awt.Window owner) {
         super(owner, "Formas de Pago", ModalityType.APPLICATION_MODAL);
@@ -72,15 +72,20 @@ public class FormaPagoFrame extends JDialog {
     }
 
     private void limpiar() {
-        idSeleccionado = 0; // 0 indica que no hay selección
+        idSeleccionado = null;
         txtNombre.setText("");
         txtDescripcion.setText("");
     }
 
     private void guardar() {
-        FormaPago formaPago = new FormaPago(idSeleccionado, txtNombre.getText(), txtDescripcion.getText());
+        if (txtNombre.getText().trim().isEmpty() || txtDescripcion.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nombre y descripción son obligatorios", "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int id = idSeleccionado != null ? idSeleccionado : 0;
+        FormaPago formaPago = new FormaPago(id, txtNombre.getText().trim(), txtDescripcion.getText().trim());
         try {
-            if (idSeleccionado == 0) { // Si es 0, es inserción
+            if (idSeleccionado == null) {
                 formaPagoDAO.insertar(formaPago);
             } else {
                 formaPagoDAO.actualizar(formaPago);
@@ -97,7 +102,7 @@ public class FormaPagoFrame extends JDialog {
         if (fila < 0) {
             return;
         }
-        idSeleccionado = (Integer) tabla.getValueAt(fila, 0); // Cast seguro desde tabla
+        idSeleccionado = (Integer) tabla.getValueAt(fila, 0);
         txtNombre.setText(String.valueOf(tabla.getValueAt(fila, 1)));
         txtDescripcion.setText(String.valueOf(tabla.getValueAt(fila, 2)));
     }
@@ -108,7 +113,7 @@ public class FormaPagoFrame extends JDialog {
             return;
         }
         Integer id = (Integer) tabla.getValueAt(fila, 0);
-        if (id == null || id == 0) { // Validación adicional
+        if (id == null) {
             return;
         }
         int opcion = JOptionPane.showConfirmDialog(this,

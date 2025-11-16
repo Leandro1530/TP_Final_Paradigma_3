@@ -3,6 +3,7 @@ package VentasDAO.UI.entities;
 import VentasDAO.DAO.*;
 import VentasDAO.Objetos.*;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -14,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.math.BigDecimal;
@@ -80,7 +82,37 @@ public class FacturaFrame extends JDialog {
         btnQuitar.addActionListener(e -> quitarProducto());
         btnGuardar.addActionListener(e -> guardarFactura());
 
+        configurarRenderers();
         cargarCombos();
+    }
+
+    private void configurarRenderers() {
+        cbCliente.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(javax.swing.JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Cliente) {
+                    Cliente cliente = (Cliente) value;
+                    String nombre = cliente.getNombre() != null ? cliente.getNombre() : "";
+                    String apellido = cliente.getApellido() != null ? cliente.getApellido() : "";
+                    setText((nombre + " " + apellido).trim());
+                }
+                return comp;
+            }
+        });
+        cbFormaPago.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(javax.swing.JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+                Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof FormaPago) {
+                    FormaPago formaPago = (FormaPago) value;
+                    setText(formaPago.getNombre() != null ? formaPago.getNombre() : "Forma de pago");
+                }
+                return comp;
+            }
+        });
     }
 
     private void cargarCombos() {
@@ -110,6 +142,11 @@ public class FacturaFrame extends JDialog {
         if (producto == null) {
             return;
         }
+        if (producto.getPrecio() == null) {
+            JOptionPane.showMessageDialog(this, "El producto seleccionado no tiene precio configurado", "Datos incompletos",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         String cantidadTexto = JOptionPane.showInputDialog(this, "Cantidad", "1");
         if (cantidadTexto == null || cantidadTexto.trim().isEmpty()) {
             return;
@@ -119,7 +156,7 @@ public class FacturaFrame extends JDialog {
             if (cantidad <= 0) {
                 throw new NumberFormatException();
             }
-            BigDecimal precio = producto.getPrecio() != null ? producto.getPrecio() : BigDecimal.ZERO;
+            BigDecimal precio = producto.getPrecio();
             BigDecimal subtotal = precio.multiply(BigDecimal.valueOf(cantidad));
 
             ((DefaultTableModel) tablaDetalles.getModel()).addRow(new Object[]{
@@ -158,6 +195,11 @@ public class FacturaFrame extends JDialog {
 
     private void guardarFactura() {
         try {
+            if (txtNumero.getText().trim().isEmpty() || txtObservaciones.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Número y observaciones son obligatorios", "Datos incompletos",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             // Validar selecciones
             Cliente cliente = (Cliente) cbCliente.getSelectedItem();
             FormaPago formaPago = (FormaPago) cbFormaPago.getSelectedItem();
@@ -183,20 +225,18 @@ public class FacturaFrame extends JDialog {
                     totalBD = totalBD.add(new BigDecimal(valor.toString()));
                 }
             }
-            float total = totalBD.floatValue();
+            Float total = totalBD.floatValue();
 
             // Crear factura con Date y float (tipos correctos según Factura.java)
             Factura factura = new Factura(
-                    0, // idFactura se generará en la BD
-                    txtNumero.getText(),
-                    cliente.getIdCliente(),
-                    formaPago.getIdFormaPago(),
-                    new Date(), // java.util.Date
-                    total, // float
-                    txtObservaciones.getText(),
+                    0,
+                    txtNumero.getText().trim(),
+                    new Date(),
+                    total,
+                    txtObservaciones.getText().trim(),
                     cliente,
                     formaPago,
-                    null // los detalles se pasan por separado
+                    null
             );
 
             List<DetalleFactura> detalles = new ArrayList<>();
@@ -208,7 +248,10 @@ public class FacturaFrame extends JDialog {
 
                 // Crear DetalleFactura usando setters
                 DetalleFactura detalle = new DetalleFactura();
-                detalle.setIdProducto(idProducto);
+                detalle.setFactura(factura);
+                Producto producto = new Producto();
+                producto.setIdProducto(idProducto);
+                detalle.setProducto(producto);
                 detalle.setCantidad(cantidad);
                 detalle.setPrecioUnitario(precioBD.floatValue());
                 detalle.setSubtotal(subtotalBD.floatValue());

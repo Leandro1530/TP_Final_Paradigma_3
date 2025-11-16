@@ -27,7 +27,7 @@ public class TipoClienteFrame extends JDialog {
     private final JTable tabla = new JTable();
     private final JTextField txtNombre = new JTextField();
     private final JTextField txtDescripcion = new JTextField();
-    private int idSeleccionado = 0; // Cambiado a int primitivo, 0 = no seleccionado
+    private Integer idSeleccionado;
 
     public TipoClienteFrame(java.awt.Window owner) {
         super(owner, "Tipos de Cliente", ModalityType.APPLICATION_MODAL);
@@ -72,15 +72,22 @@ public class TipoClienteFrame extends JDialog {
     }
 
     private void limpiar() {
-        idSeleccionado = 0; // 0 indica que no hay selección
+        idSeleccionado = null;
         txtNombre.setText("");
         txtDescripcion.setText("");
     }
 
     private void guardar() {
-        TipoCliente tipoCliente = new TipoCliente(idSeleccionado, txtNombre.getText(), txtDescripcion.getText());
+        if (txtNombre.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre es obligatorio", "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        TipoCliente tipoCliente = new TipoCliente();
+        tipoCliente.setIdTipoCliente(idSeleccionado != null ? idSeleccionado : 0);
+        tipoCliente.setNombre(txtNombre.getText().trim());
+        tipoCliente.setDescripcion(txtDescripcion.getText().trim());
         try {
-            if (idSeleccionado == 0) { // Si es 0, es inserción
+            if (idSeleccionado == null) {
                 tipoClienteDAO.insertar(tipoCliente);
             } else {
                 tipoClienteDAO.actualizar(tipoCliente);
@@ -97,7 +104,7 @@ public class TipoClienteFrame extends JDialog {
         if (fila < 0) {
             return;
         }
-        idSeleccionado = (Integer) tabla.getValueAt(fila, 0); // Cast seguro desde tabla
+        idSeleccionado = (Integer) tabla.getValueAt(fila, 0);
         txtNombre.setText(String.valueOf(tabla.getValueAt(fila, 1)));
         txtDescripcion.setText(String.valueOf(tabla.getValueAt(fila, 2)));
     }
@@ -108,7 +115,7 @@ public class TipoClienteFrame extends JDialog {
             return;
         }
         Integer id = (Integer) tabla.getValueAt(fila, 0);
-        if (id == null || id == 0) { // Validación adicional
+        if (id == null) {
             return;
         }
         int opcion = JOptionPane.showConfirmDialog(this,

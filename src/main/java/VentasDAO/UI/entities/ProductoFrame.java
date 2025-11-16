@@ -96,7 +96,7 @@ public class ProductoFrame extends JDialog {
                     producto.getDescripcion(),
                     producto.getPrecio(),
                     producto.getStock(),
-                    producto.getIdCategoria()
+                    producto.getCategoria()
             });
         }
         tabla.setModel(modelo);
@@ -113,19 +113,31 @@ public class ProductoFrame extends JDialog {
 
     private void guardar() {
         try {
-            // Cambiado isBlank() por trim().isEmpty() para compatibilidad Java 8-10
-            BigDecimal precio = txtPrecio.getText().trim().isEmpty() ? null : new BigDecimal(txtPrecio.getText());
-            Integer stock = txtStock.getText().trim().isEmpty() ? null : Integer.valueOf(txtStock.getText());
+            if (txtNombre.getText().trim().isEmpty()
+                    || txtDescripcion.getText().trim().isEmpty()
+                    || txtPrecio.getText().trim().isEmpty()
+                    || txtStock.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios", "Datos incompletos",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             Categoria seleccionada = (Categoria) cbCategoria.getSelectedItem();
-            Integer idCategoria = seleccionada != null ? seleccionada.getIdCategoria() : null;
+            if (seleccionada == null || seleccionada.getIdCategoria() <= 0) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar una categoría", "Datos incompletos",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-            Producto producto = new Producto(
-                    idSeleccionado,
-                    txtNombre.getText(),
-                    txtDescripcion.getText(),
-                    precio,
-                    stock,
-                    idCategoria);
+            BigDecimal precio = new BigDecimal(txtPrecio.getText().trim());
+            Integer stock = Integer.valueOf(txtStock.getText().trim());
+
+            Producto producto = new Producto();
+            producto.setIdProducto(idSeleccionado != null ? idSeleccionado : 0);
+            producto.setNombre(txtNombre.getText().trim());
+            producto.setDescripcion(txtDescripcion.getText().trim());
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            producto.setCategoria(seleccionada);
 
             if (idSeleccionado == null) {
                 productoDAO.insertar(producto);
@@ -152,11 +164,11 @@ public class ProductoFrame extends JDialog {
         txtPrecio.setText(String.valueOf(tabla.getValueAt(fila, 3)));
         txtStock.setText(String.valueOf(tabla.getValueAt(fila, 4)));
 
-        Integer idCategoria = (Integer) tabla.getValueAt(fila, 5);
-        if (idCategoria != null) {
+        Categoria categoria = (Categoria) tabla.getValueAt(fila, 5);
+        if (categoria != null) {
             for (int i = 0; i < cbCategoria.getItemCount(); i++) {
                 Categoria item = cbCategoria.getItemAt(i);
-                if (item != null && idCategoria.equals(item.getIdCategoria())) {
+                if (item != null && item.getIdCategoria() == categoria.getIdCategoria()) {
                     cbCategoria.setSelectedIndex(i);
                     break;
                 }

@@ -105,7 +105,7 @@ public class ClienteFrame extends JDialog {
                     cliente.getDireccion(),
                     cliente.getTelefono(),
                     cliente.getEmail(),
-                    cliente.getIdTipoCliente()
+                    cliente.getTipoCliente()
             });
         }
         tablaClientes.setModel(modelo);
@@ -123,18 +123,20 @@ public class ClienteFrame extends JDialog {
     }
 
     private void guardar() {
+        if (!validarCampos()) {
+            return;
+        }
         TipoCliente seleccionado = (TipoCliente) cbTipo.getSelectedItem();
-        Integer idTipo = seleccionado != null ? seleccionado.getIdTipoCliente() : null;
 
-        Cliente cliente = new Cliente(
-                idSeleccionado,
-                txtNombre.getText(),
-                txtApellido.getText(),
-                txtDni.getText(),
-                txtDireccion.getText(),
-                txtTelefono.getText(),
-                txtEmail.getText(),
-                idTipo);
+        Cliente cliente = new Cliente();
+        cliente.setIdCliente(idSeleccionado != null ? idSeleccionado : 0);
+        cliente.setNombre(txtNombre.getText().trim());
+        cliente.setApellido(txtApellido.getText().trim());
+        cliente.setDni(txtDni.getText().trim());
+        cliente.setDireccion(txtDireccion.getText().trim());
+        cliente.setTelefono(txtTelefono.getText().trim());
+        cliente.setEmail(txtEmail.getText().trim());
+        cliente.setTipoCliente(seleccionado);
         try {
             if (idSeleccionado == null) {
                 clienteDAO.insertar(cliente);
@@ -146,6 +148,25 @@ public class ClienteFrame extends JDialog {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean validarCampos() {
+        if (txtNombre.getText().trim().isEmpty()
+                || txtApellido.getText().trim().isEmpty()
+                || txtDni.getText().trim().isEmpty()
+                || txtDireccion.getText().trim().isEmpty()
+                || txtTelefono.getText().trim().isEmpty()
+                || txtEmail.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Todos los campos del formulario son obligatorios", "Datos incompletos",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (cbTipo.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar un tipo de cliente", "Datos incompletos",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return true;
     }
 
     private void cargarSeleccion() {
@@ -161,11 +182,11 @@ public class ClienteFrame extends JDialog {
         txtTelefono.setText(String.valueOf(tablaClientes.getValueAt(fila, 5)));
         txtEmail.setText(String.valueOf(tablaClientes.getValueAt(fila, 6)));
 
-        Integer idTipo = (Integer) tablaClientes.getValueAt(fila, 7);
-        if (idTipo != null) {
+        TipoCliente tipo = (TipoCliente) tablaClientes.getValueAt(fila, 7);
+        if (tipo != null) {
             for (int i = 0; i < cbTipo.getItemCount(); i++) {
                 TipoCliente item = cbTipo.getItemAt(i);
-                if (item != null && idTipo.equals(item.getIdTipoCliente())) {
+                if (item != null && item.getIdTipoCliente() == tipo.getIdTipoCliente()) {
                     cbTipo.setSelectedIndex(i);
                     break;
                 }

@@ -1,6 +1,7 @@
 package VentasDAO.DAO;
 
 import VentasDAO.Conexion.ConexionDB;
+import VentasDAO.Interfaz.ICategoriaDAO;
 import VentasDAO.Objetos.Categoria;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,8 +13,9 @@ import java.util.List;
 /**
  * DAO para operaciones sobre la tabla {@code categoria}.
  */
-public class CategoriaDAO {
+public class CategoriaDAO implements ICategoriaDAO {
 
+    @Override
     public List<Categoria> listar() {
         List<Categoria> categorias = new ArrayList<>();
         String sql = "SELECT id_categoria, nombre, descripcion FROM categoria ORDER BY id_categoria";
@@ -24,7 +26,7 @@ public class CategoriaDAO {
 
             while (rs.next()) {
                 categorias.add(new Categoria(
-                        (Integer) rs.getObject("id_categoria"),
+                        rs.getInt("id_categoria"),
                         rs.getString("nombre"),
                         rs.getString("descripcion")));
             }
@@ -34,7 +36,9 @@ public class CategoriaDAO {
         return categorias;
     }
 
+    @Override
     public void insertar(Categoria categoria) throws SQLException {
+        validar(categoria);
         String sql = "INSERT INTO categoria(nombre, descripcion) VALUES(?, ?)";
 
         try (Connection cn = ConexionDB.getConnection();
@@ -46,10 +50,12 @@ public class CategoriaDAO {
         }
     }
 
+    @Override
     public void actualizar(Categoria categoria) throws SQLException {
-        if (categoria.getIdCategoria() == null) {
+        if (categoria.getIdCategoria() <= 0) {
             throw new SQLException("El id de la categoría es obligatorio para actualizar");
         }
+        validar(categoria);
 
         String sql = "UPDATE categoria SET nombre = ?, descripcion = ? WHERE id_categoria = ?";
 
@@ -63,8 +69,9 @@ public class CategoriaDAO {
         }
     }
 
+    @Override
     public void eliminar(Integer idCategoria) throws SQLException {
-        if (idCategoria == null) {
+        if (idCategoria == null || idCategoria <= 0) {
             throw new SQLException("El id de la categoría es obligatorio para eliminar");
         }
 
@@ -76,5 +83,21 @@ public class CategoriaDAO {
             ps.setInt(1, idCategoria);
             ps.executeUpdate();
         }
+    }
+
+    private void validar(Categoria categoria) throws SQLException {
+        if (categoria == null) {
+            throw new SQLException("Debe proporcionar la categoría");
+        }
+        if (estaVacio(categoria.getNombre())) {
+            throw new SQLException("El nombre de la categoría es obligatorio");
+        }
+        if (estaVacio(categoria.getDescripcion())) {
+            throw new SQLException("La descripción de la categoría es obligatoria");
+        }
+    }
+
+    private boolean estaVacio(String valor) {
+        return valor == null || valor.trim().isEmpty();
     }
 }
