@@ -12,9 +12,7 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.sql.SQLException;
 
-/**
- * ABM mejorado para {@link Categoria} con diseño moderno y profesional.
- */
+
 public class CategoriaFrame extends JDialog {
 
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
@@ -155,10 +153,10 @@ public class CategoriaFrame extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panel.setBackground(BACKGROUND_COLOR);
 
-        JButton btnLimpiar = crearBoton("Limpiar", WARNING_COLOR, "limpiar.png");
-        JButton btnEditar = crearBoton("Editar", SECONDARY_COLOR, "editar.png");
-        JButton btnEliminar = crearBoton("Eliminar", DANGER_COLOR, "eliminar.png");
-        JButton btnGuardar = crearBoton("Guardar", SUCCESS_COLOR, "guardar.png");
+        JButton btnLimpiar = crearBoton(" Limpiar", WARNING_COLOR);
+        JButton btnEditar = crearBoton("️ Editar", SECONDARY_COLOR);
+        JButton btnEliminar = crearBoton(" Eliminar", DANGER_COLOR);
+        JButton btnGuardar = crearBoton(" Guardar", SUCCESS_COLOR);
 
         btnLimpiar.addActionListener(e -> limpiar());
         btnEditar.addActionListener(e -> cargarSeleccion());
@@ -173,14 +171,14 @@ public class CategoriaFrame extends JDialog {
         return panel;
     }
 
-    private JButton crearBoton(String texto, Color color, String icono) {
+    private JButton crearBoton(String texto, Color color) {
         JButton boton = new JButton(texto);
         boton.setFont(new Font("Segoe UI", Font.BOLD, 13));
         boton.setBackground(color);
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
         boton.setBorderPainted(false);
-        boton.setPreferredSize(new Dimension(110, 35));
+        boton.setPreferredSize(new Dimension(140, 40));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Efecto hover
@@ -237,10 +235,29 @@ public class CategoriaFrame extends JDialog {
         txtNombre.requestFocus();
     }
 
+
+    private boolean validarCampos() {
+        // Validar nombre con mínimo 3 caracteres
+        if (txtNombre.getText().trim().length() < 3) {
+            mostrarMensaje("El nombre debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtNombre.requestFocus();
+            return false;
+        }
+
+        // Validar descripción con mínimo 3 caracteres
+        if (txtDescripcion.getText().trim().length() < 3) {
+            mostrarMensaje("La descripción debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDescripcion.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     private void guardar() {
-        if (txtNombre.getText().trim().isEmpty() || txtDescripcion.getText().trim().isEmpty()) {
-            mostrarMensaje("Nombre y descripción son obligatorios", "Datos incompletos",
-                    JOptionPane.WARNING_MESSAGE);
+        if (!validarCampos()) {
             return;
         }
 

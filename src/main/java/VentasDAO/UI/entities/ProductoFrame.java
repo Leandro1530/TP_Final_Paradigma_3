@@ -10,6 +10,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -59,9 +63,49 @@ public class ProductoFrame extends JDialog {
         panelPrincipal.add(crearPanelBotones(), BorderLayout.SOUTH);
 
         add(panelPrincipal);
-
+        aplicarFiltrosNumericos();
         cargarCategorias();
         refrescarTabla();
+    }
+
+    private void aplicarFiltrosNumericos() {
+        // Filtro para Precio: solo números
+        ((AbstractDocument) txtPrecio.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+
+        // Filtro para Stock: solo números
+        ((AbstractDocument) txtStock.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private JPanel crearPanelFormulario() {
@@ -162,7 +206,7 @@ public class ProductoFrame extends JDialog {
         panel.setBackground(COLOR_FONDO);
 
         JButton btnGuardar = crearBotonEstilizado(" Guardar", COLOR_EXITO);
-        JButton btnEditar = crearBotonEstilizado(" Editar", COLOR_SECUNDARIO);
+        JButton btnEditar = crearBotonEstilizado("️ Editar", COLOR_SECUNDARIO);
         JButton btnEliminar = crearBotonEstilizado(" Eliminar", COLOR_PELIGRO);
         JButton btnLimpiar = crearBotonEstilizado(" Limpiar", COLOR_ADVERTENCIA);
 
@@ -273,7 +317,84 @@ public class ProductoFrame extends JDialog {
         tabla.clearSelection();
     }
 
+    private boolean validarCampos() {
+        // Validar campos de texto con mínimo 3 caracteres
+        if (txtNombre.getText().trim().length() < 3) {
+            mostrarMensaje("El nombre debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtNombre.requestFocus();
+            return false;
+        }
+
+        if (txtDescripcion.getText().trim().length() < 3) {
+            mostrarMensaje("La descripcion debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDescripcion.requestFocus();
+            return false;
+        }
+
+        // Validar campos numéricos
+        if (txtPrecio.getText().trim().isEmpty()) {
+            mostrarMensaje("El precio es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtPrecio.requestFocus();
+            return false;
+        }
+
+        // Validar que precio sea un número válido mayor a 0
+        try {
+            long precio = Long.parseLong(txtPrecio.getText().trim());
+            if (precio <= 0) {
+                mostrarMensaje("El precio debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtPrecio.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El precio debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtPrecio.requestFocus();
+            return false;
+        }
+
+        if (txtStock.getText().trim().isEmpty()) {
+            mostrarMensaje("El stock es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtStock.requestFocus();
+            return false;
+        }
+
+        // Validar que stock sea un número válido mayor a 0
+        try {
+            long stock = Long.parseLong(txtStock.getText().trim());
+            if (stock <= 0) {
+                mostrarMensaje("El stock debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtStock.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El stock debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtStock.requestFocus();
+            return false;
+        }
+
+        // Validar categoria
+        if (cbCategoria.getSelectedItem() == null) {
+            mostrarMensaje("Debe seleccionar una categoria",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbCategoria.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     private void guardar() {
+        if (!validarCampos()) {
+            return;
+        }
         try {
             if (txtNombre.getText().trim().isEmpty()
                     || txtDescripcion.getText().trim().isEmpty()

@@ -11,12 +11,14 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.sql.SQLException;
 
-/**
- * ABM mejorado para {@link Cliente} con diseño moderno y profesional.
- */
+
 public class ClienteFrame extends JDialog {
 
     private final ClienteDAO clienteDAO = new ClienteDAO();
@@ -50,9 +52,51 @@ public class ClienteFrame extends JDialog {
         setLayout(new BorderLayout(10, 10));
         getContentPane().setBackground(BACKGROUND_COLOR);
 
+        aplicarFiltrosNumericos();
         initComponents();
         cargarTipos();
         refrescarTabla();
+    }
+
+
+    private void aplicarFiltrosNumericos() {
+        // Filtro para DNI: solo números
+        ((AbstractDocument) txtDni.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+
+        // Filtro para Teléfono: solo números
+        ((AbstractDocument) txtTelefono.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private void initComponents() {
@@ -173,10 +217,10 @@ public class ClienteFrame extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panel.setBackground(BACKGROUND_COLOR);
 
-        JButton btnLimpiar = crearBoton("Limpiar", WARNING_COLOR);
-        JButton btnEditar = crearBoton("Editar", SECONDARY_COLOR);
-        JButton btnEliminar = crearBoton("Eliminar", DANGER_COLOR);
-        JButton btnGuardar = crearBoton("Guardar", SUCCESS_COLOR);
+        JButton btnLimpiar = crearBoton(" Limpiar", WARNING_COLOR);
+        JButton btnEditar = crearBoton(" Editar", SECONDARY_COLOR);
+        JButton btnEliminar = crearBoton(" Eliminar", DANGER_COLOR);
+        JButton btnGuardar = crearBoton(" Guardar", SUCCESS_COLOR);
 
         btnLimpiar.addActionListener(e -> limpiar());
         btnEditar.addActionListener(e -> cargarSeleccion());
@@ -198,7 +242,7 @@ public class ClienteFrame extends JDialog {
         boton.setForeground(Color.WHITE);
         boton.setFocusPainted(false);
         boton.setBorderPainted(false);
-        boton.setPreferredSize(new Dimension(110, 35));
+        boton.setPreferredSize(new Dimension(140, 40));
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         boton.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -319,22 +363,100 @@ public class ClienteFrame extends JDialog {
         }
     }
 
+
     private boolean validarCampos() {
-        if (txtNombre.getText().trim().isEmpty() ||
-                txtApellido.getText().trim().isEmpty() ||
-                txtDni.getText().trim().isEmpty() ||
-                txtDireccion.getText().trim().isEmpty() ||
-                txtTelefono.getText().trim().isEmpty() ||
-                txtEmail.getText().trim().isEmpty()) {
-            mostrarMensaje("Todos los campos del formulario son obligatorios",
-                    "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+        // Validar campos de texto con mínimo 3 caracteres
+        if (txtNombre.getText().trim().length() < 3) {
+            mostrarMensaje("El nombre debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtNombre.requestFocus();
             return false;
         }
+
+        if (txtApellido.getText().trim().length() < 3) {
+            mostrarMensaje("El apellido debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtApellido.requestFocus();
+            return false;
+        }
+
+        if (txtDireccion.getText().trim().length() < 3) {
+            mostrarMensaje("La dirección debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDireccion.requestFocus();
+            return false;
+        }
+
+        if (txtEmail.getText().trim().length() < 3) {
+            mostrarMensaje("El email debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtEmail.requestFocus();
+            return false;
+        }
+
+        // Validación básica de formato de email
+        if (!txtEmail.getText().trim().contains("@") || !txtEmail.getText().trim().contains(".")) {
+            mostrarMensaje("El email debe tener un formato válido (ejemplo@dominio.com)",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtEmail.requestFocus();
+            return false;
+        }
+
+        // Validar campos numéricos
+        if (txtDni.getText().trim().isEmpty()) {
+            mostrarMensaje("El DNI es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDni.requestFocus();
+            return false;
+        }
+
+        // Validar que DNI sea un número válido mayor a 0
+        try {
+            long dni = Long.parseLong(txtDni.getText().trim());
+            if (dni <= 0) {
+                mostrarMensaje("El DNI debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtDni.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El DNI debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDni.requestFocus();
+            return false;
+        }
+
+        if (txtTelefono.getText().trim().isEmpty()) {
+            mostrarMensaje("El teléfono es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtTelefono.requestFocus();
+            return false;
+        }
+
+        // Validar que Teléfono sea un número válido mayor a 0
+        try {
+            long telefono = Long.parseLong(txtTelefono.getText().trim());
+            if (telefono <= 0) {
+                mostrarMensaje("El teléfono debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtTelefono.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El teléfono debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtTelefono.requestFocus();
+            return false;
+        }
+
+        // Validar tipo de cliente
         if (cbTipo.getSelectedItem() == null) {
             mostrarMensaje("Debe seleccionar un tipo de cliente",
-                    "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbTipo.requestFocus();
             return false;
         }
+
         return true;
     }
 

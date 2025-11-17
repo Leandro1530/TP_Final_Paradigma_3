@@ -134,7 +134,7 @@ public class TipoClienteFrame extends JDialog {
         panel.setBackground(COLOR_FONDO);
 
         JButton btnGuardar = crearBotonEstilizado(" Guardar", COLOR_EXITO);
-        JButton btnEditar = crearBotonEstilizado(" Editar", COLOR_SECUNDARIO);
+        JButton btnEditar = crearBotonEstilizado("️ Editar", COLOR_SECUNDARIO);
         JButton btnEliminar = crearBotonEstilizado(" Eliminar", COLOR_PELIGRO);
         JButton btnLimpiar = crearBotonEstilizado(" Limpiar", COLOR_ADVERTENCIA);
 
@@ -190,6 +190,27 @@ public class TipoClienteFrame extends JDialog {
         return boton;
     }
 
+
+    private boolean validarCampos() {
+        // Validar nombre con mínimo 3 caracteres
+        if (txtNombre.getText().trim().length() < 3) {
+            mostrarMensaje("El nombre debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtNombre.requestFocus();
+            return false;
+        }
+
+        // Validar descripción (opcional, pero si tiene texto debe tener mínimo 3 caracteres)
+        if (!txtDescripcion.getText().trim().isEmpty() && txtDescripcion.getText().trim().length() < 3) {
+            mostrarMensaje("La descripción debe tener al menos 3 caracteres o estar vacía",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDescripcion.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     private void refrescarTabla() {
         DefaultTableModel modelo = new DefaultTableModel(
                 new Object[]{"ID", "Nombre", "Descripción"}, 0) {
@@ -222,6 +243,9 @@ public class TipoClienteFrame extends JDialog {
     }
 
     private void guardar() {
+        if (!validarCampos()) {
+            return;
+        }
         if (txtNombre.getText().trim().isEmpty()) {
             mostrarMensaje("El nombre es obligatorio", "Datos Incompletos", JOptionPane.WARNING_MESSAGE);
             return;

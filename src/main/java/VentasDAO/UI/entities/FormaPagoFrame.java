@@ -76,17 +76,24 @@ public class FormaPagoFrame extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Nombre
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         contenido.add(crearEtiqueta("Nombre:"), gbc);
 
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         contenido.add(estilizarCampoTexto(txtNombre), gbc);
 
         // Descripción
-        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         contenido.add(crearEtiqueta("Descripción:"), gbc);
 
-        gbc.gridx = 3; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         contenido.add(estilizarCampoTexto(txtDescripcion), gbc);
 
         panel.add(contenido, BorderLayout.CENTER);
@@ -134,7 +141,7 @@ public class FormaPagoFrame extends JDialog {
         panel.setBackground(COLOR_FONDO);
 
         JButton btnGuardar = crearBotonEstilizado(" Guardar", COLOR_EXITO);
-        JButton btnEditar = crearBotonEstilizado("️ Editar", COLOR_SECUNDARIO);
+        JButton btnEditar = crearBotonEstilizado(" Editar", COLOR_SECUNDARIO);
         JButton btnEliminar = crearBotonEstilizado(" Eliminar", COLOR_PELIGRO);
         JButton btnLimpiar = crearBotonEstilizado(" Limpiar", COLOR_ADVERTENCIA);
 
@@ -182,6 +189,7 @@ public class FormaPagoFrame extends JDialog {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 boton.setBackground(color.brighter());
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 boton.setBackground(color);
             }
@@ -189,6 +197,7 @@ public class FormaPagoFrame extends JDialog {
 
         return boton;
     }
+
 
     private void refrescarTabla() {
         DefaultTableModel modelo = new DefaultTableModel(
@@ -221,7 +230,31 @@ public class FormaPagoFrame extends JDialog {
         tabla.clearSelection();
     }
 
+    private boolean validarCampos() {
+        // Validar nombre con mínimo 3 caracteres
+        if (txtNombre.getText().trim().length() < 3) {
+            mostrarMensaje("El nombre debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtNombre.requestFocus();
+            return false;
+        }
+
+        // Validar descripción con mínimo 3 caracteres
+        if (txtDescripcion.getText().trim().length() < 3) {
+            mostrarMensaje("La descripción debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtDescripcion.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     private void guardar() {
+        if (!validarCampos()) {
+            return;
+        }
+
         if (txtNombre.getText().trim().isEmpty() || txtDescripcion.getText().trim().isEmpty()) {
             mostrarMensaje("Nombre y descripción son obligatorios", "Datos Incompletos", JOptionPane.WARNING_MESSAGE);
             return;
@@ -244,6 +277,9 @@ public class FormaPagoFrame extends JDialog {
             mostrarMensaje("Error en la base de datos: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+
+
 
     private void cargarSeleccion() {
         int fila = tabla.getSelectedRow();

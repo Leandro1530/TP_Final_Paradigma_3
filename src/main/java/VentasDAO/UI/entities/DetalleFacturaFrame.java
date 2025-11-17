@@ -13,13 +13,15 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-/**
- * Gestión mejorada de Detalles de Factura con diseño moderno y profesional.
- */
+
 public class DetalleFacturaFrame extends JDialog {
 
     private final DetalleFacturaDAO detalleDAO;
@@ -74,12 +76,52 @@ public class DetalleFacturaFrame extends JDialog {
         mainPanel.add(crearPanelBotones(), BorderLayout.SOUTH);
 
         add(mainPanel);
-
+        aplicarFiltrosNumericos();
         configurarCombos();
         cargarCombos();
         refrescarTabla();
 
         setSize(1000, 650);
+    }
+
+    private void aplicarFiltrosNumericos() {
+        // Filtro para Precio: solo números
+        ((AbstractDocument) txtPrecio.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+
+        // Filtro para Cantidad: solo números
+        ((AbstractDocument) txtCantidad.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                    throws BadLocationException {
+                if (string != null && string.matches("\\d*")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                    throws BadLocationException {
+                if (text != null && text.matches("\\d*")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
     }
 
     private JPanel crearPanelFormulario() {
@@ -220,8 +262,6 @@ public class DetalleFacturaFrame extends JDialog {
         header.setForeground(Color.BLACK);
         header.setPreferredSize(new Dimension(header.getWidth(), 35));
 
-        configurarRenderers();
-
         JScrollPane scrollPane = new JScrollPane(tabla);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -233,10 +273,10 @@ public class DetalleFacturaFrame extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panel.setBackground(BACKGROUND_COLOR);
 
-        JButton btnLimpiar = crearBoton("🔄 Limpiar", WARNING_COLOR);
-        JButton btnEditar = crearBoton("✏️ Editar", SECONDARY_COLOR);
-        JButton btnEliminar = crearBoton("🗑️ Eliminar", DANGER_COLOR);
-        JButton btnGuardar = crearBoton("💾 Guardar", SUCCESS_COLOR);
+        JButton btnLimpiar = crearBoton(" Limpiar", WARNING_COLOR);
+        JButton btnEditar = crearBoton(" Editar", SECONDARY_COLOR);
+        JButton btnEliminar = crearBoton(" Eliminar", DANGER_COLOR);
+        JButton btnGuardar = crearBoton(" Guardar", SUCCESS_COLOR);
 
         btnLimpiar.addActionListener(e -> limpiar());
         btnEditar.addActionListener(e -> cargarSeleccion());
@@ -289,6 +329,7 @@ public class DetalleFacturaFrame extends JDialog {
     }
 
     private void configurarRenderers() {
+        // Renderizador personalizado para Factura
         tabla.setDefaultRenderer(Factura.class, new DefaultTableCellRenderer() {
             @Override
             protected void setValue(Object value) {
@@ -305,6 +346,7 @@ public class DetalleFacturaFrame extends JDialog {
             }
         });
 
+        // Renderizador personalizado para Producto
         tabla.setDefaultRenderer(Producto.class, new DefaultTableCellRenderer() {
             @Override
             protected void setValue(Object value) {
@@ -320,12 +362,20 @@ public class DetalleFacturaFrame extends JDialog {
                 }
             }
         });
+    }
 
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-        tabla.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
-        tabla.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
-        tabla.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+    private void configurarRenderersNumericos() {
+        if (tabla.getColumnCount() >= 6) {
+            DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+            rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+
+            // Columna 3: Cantidad
+            // Columna 4: Precio Unitario
+            // Columna 5: Subtotal
+            tabla.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+            tabla.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+            tabla.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+        }
     }
 
     private void configurarCombos() {
@@ -427,6 +477,10 @@ public class DetalleFacturaFrame extends JDialog {
         }
         tabla.setModel(modelo);
 
+        // Configurar renderers DESPUÉS de asignar el modelo
+        configurarRenderers();
+        configurarRenderersNumericos();
+
         // Ajustar anchos de columnas
         tabla.getColumnModel().getColumn(0).setPreferredWidth(60);
         tabla.getColumnModel().getColumn(1).setPreferredWidth(150);
@@ -506,7 +560,75 @@ public class DetalleFacturaFrame extends JDialog {
         }
     }
 
+    private boolean validarCampos() {
+
+        // Validar Factura seleccionada
+        if (cbFactura.getSelectedItem() == null) {
+            mostrarMensaje("Debe seleccionar una factura",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbFactura.requestFocus();
+            return false;
+        }
+        // Validar Producto seleccionado
+        if (cbProducto.getSelectedItem() == null) {
+            mostrarMensaje("Debe seleccionar un producto",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbProducto.requestFocus();
+            return false;
+        }
+
+        if (txtCantidad.getText().trim().isEmpty()) {
+            mostrarMensaje("La cantidad es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtCantidad.requestFocus();
+            return false;
+        }
+
+        // Validar que cantidad sea un número válido mayor a 0
+        try {
+            long stock = Long.parseLong(txtCantidad.getText().trim());
+            if (stock <= 0) {
+                mostrarMensaje("La cantidad debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtCantidad.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("La cantidad debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtCantidad.requestFocus();
+            return false;
+        }
+        // Validar campos numéricos
+        if (txtPrecio.getText().trim().isEmpty()) {
+            mostrarMensaje("El precio es obligatorio",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtPrecio.requestFocus();
+            return false;
+        }
+
+        // Validar que precio sea un número válido mayor a 0
+        try {
+            long precio = Long.parseLong(txtPrecio.getText().trim());
+            if (precio <= 0) {
+                mostrarMensaje("El precio debe ser un número mayor a 0",
+                        "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+                txtPrecio.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            mostrarMensaje("El precio debe contener solo números",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtPrecio.requestFocus();
+            return false;
+        }
+        return true;
+    }
+
     private void guardar() {
+        if (!validarCampos()) {
+            return;
+        }
         int filaSeleccionada = tabla.getSelectedRow();
         Integer idExistente = null;
         if (filaSeleccionada >= 0) {

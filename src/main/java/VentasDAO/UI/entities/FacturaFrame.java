@@ -16,9 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Ventana mejorada para generar facturas y sus detalles con diseño moderno.
- */
+
 public class FacturaFrame extends JDialog {
 
     private final ClienteDAO clienteDAO = new ClienteDAO();
@@ -212,8 +210,8 @@ public class FacturaFrame extends JDialog {
         JPanel panelBotonesProductos = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         panelBotonesProductos.setBackground(PANEL_COLOR);
 
-        JButton btnAgregar = crearBoton("➕ Agregar Producto", SUCCESS_COLOR);
-        JButton btnQuitar = crearBoton("➖ Quitar Producto", DANGER_COLOR);
+        JButton btnAgregar = crearBoton(" Agregar Producto", SUCCESS_COLOR);
+        JButton btnQuitar = crearBoton(" Quitar Producto", DANGER_COLOR);
 
         btnAgregar.addActionListener(e -> agregarProducto());
         btnQuitar.addActionListener(e -> quitarProducto());
@@ -257,8 +255,8 @@ public class FacturaFrame extends JDialog {
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panelBotones.setBackground(BACKGROUND_COLOR);
 
-        JButton btnCancelar = crearBoton("✖️ Cancelar", DANGER_COLOR);
-        JButton btnGuardar = crearBoton("💾 Guardar Factura", SUCCESS_COLOR);
+        JButton btnCancelar = crearBoton(" Cancelar", DANGER_COLOR);
+        JButton btnGuardar = crearBoton(" Guardar Factura", SUCCESS_COLOR);
         btnGuardar.setPreferredSize(new Dimension(180, 40));
         btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
@@ -452,7 +450,37 @@ public class FacturaFrame extends JDialog {
         lblCantidadItems.setText(cantidadItems + " item" + (cantidadItems != 1 ? "s" : ""));
     }
 
+    private boolean validarCampos() {
+        // Validar cliente
+        if (cbCliente.getSelectedItem() == null) {
+            mostrarMensaje("Debe seleccionar un cliente",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbCliente.requestFocus();
+            return false;
+        }
+
+        // Validar forma de pago
+        if (cbFormaPago.getSelectedItem() == null) {
+            mostrarMensaje("Debe seleccionar una forma de pago",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            cbFormaPago.requestFocus();
+            return false;
+        }
+        // Validar campos de texto con mínimo 3 caracteres
+        if (txtObservaciones.getText().trim().length() < 3) {
+            mostrarMensaje("La observacion debe tener al menos 3 caracteres",
+                    "Validación de Datos", JOptionPane.WARNING_MESSAGE);
+            txtObservaciones.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     private void guardarFactura() {
+        if (!validarCampos()) {
+            return;
+        }
         try {
             // Validar campos básicos
             if (txtNumero.getText().trim().isEmpty() ||
