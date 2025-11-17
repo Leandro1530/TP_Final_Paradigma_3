@@ -4,15 +4,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- * Conexión JDBC a PostgreSQL usando patrón Singleton.
- */
+
 public class ConexionDB {
 
     // Datos de conexión
-    private static final String URL = "jdbc:postgresql://localhost:5432/scriptDB_nanotecch";
+    private static final String URL = "jdbc:postgresql://localhost:5432/Ventas";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "yo123";
+    private static final String PASSWORD = "198996";
     private static final String DRIVER = "org.postgresql.Driver";
 
     // Única instancia de Connection
