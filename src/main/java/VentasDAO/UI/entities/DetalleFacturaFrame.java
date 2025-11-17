@@ -7,27 +7,19 @@ import VentasDAO.Objetos.DetalleFactura;
 import VentasDAO.Objetos.Factura;
 import VentasDAO.Objetos.Producto;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
+/**
+ * Gestión mejorada de Detalles de Factura con diseño moderno y profesional.
+ */
 public class DetalleFacturaFrame extends JDialog {
 
     private final DetalleFacturaDAO detalleDAO;
@@ -41,142 +33,262 @@ public class DetalleFacturaFrame extends JDialog {
     private JTextField txtPrecio;
     private JTextField txtSubtotal;
 
+    // Colores del tema
+    private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
+    private static final Color SECONDARY_COLOR = new Color(52, 152, 219);
+    private static final Color SUCCESS_COLOR = new Color(46, 204, 113);
+    private static final Color DANGER_COLOR = new Color(231, 76, 60);
+    private static final Color WARNING_COLOR = new Color(243, 156, 18);
+    private static final Color INFO_COLOR = new Color(142, 68, 173);
+    private static final Color BACKGROUND_COLOR = new Color(236, 240, 241);
+    private static final Color PANEL_COLOR = Color.WHITE;
+    private static final Color TEXT_COLOR = new Color(44, 62, 80);
+    private static final Color ACCENT_COLOR = new Color(26, 188, 156);
+
     public DetalleFacturaFrame(java.awt.Component parent) {
-        this(
-                parent,
-                new DetalleFacturaDAO(),
-                new FacturaDAO(),
-                new ProductoDAO()
-        );
+        this(parent, new DetalleFacturaDAO(), new FacturaDAO(), new ProductoDAO());
     }
 
     public DetalleFacturaFrame(Component parent, DetalleFacturaDAO detalleDAO,
                                FacturaDAO facturaDAO, ProductoDAO productoDAO) {
-        super(JOptionPane.getFrameForComponent(parent), "Gestión de Detalles de Factura", true);
+        super(JOptionPane.getFrameForComponent(parent),
+                "Gestión de Detalles de Factura", true);
         this.detalleDAO = detalleDAO;
         this.facturaDAO = facturaDAO;
         this.productoDAO = productoDAO;
+
         initUI();
         setLocationRelativeTo(parent);
     }
 
     private void initUI() {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(10, 10));
+        getContentPane().setBackground(BACKGROUND_COLOR);
 
-        // Panel de formulario
-        JPanel panelFormulario = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(BACKGROUND_COLOR);
+        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        panelFormulario.add(new JLabel("Factura:"), gbc);
-        gbc.gridx++;
-        cbFactura = new JComboBox<>();
-        cbFactura.setPrototypeDisplayValue(new Factura());
-        panelFormulario.add(cbFactura, gbc);
+        mainPanel.add(crearPanelFormulario(), BorderLayout.NORTH);
+        mainPanel.add(crearPanelTabla(), BorderLayout.CENTER);
+        mainPanel.add(crearPanelBotones(), BorderLayout.SOUTH);
 
-        gbc.gridx = 0;
-        gbc.gridy++;
-        panelFormulario.add(new JLabel("Producto:"), gbc);
-        gbc.gridx++;
-        cbProducto = new JComboBox<>();
-        panelFormulario.add(cbProducto, gbc);
+        add(mainPanel);
 
-        gbc.gridx = 0;
-        gbc.gridy++;
-        panelFormulario.add(new JLabel("Cantidad:"), gbc);
-        gbc.gridx++;
-        txtCantidad = new JTextField(10);
-        panelFormulario.add(txtCantidad, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        panelFormulario.add(new JLabel("Precio unitario:"), gbc);
-        gbc.gridx++;
-        txtPrecio = new JTextField(10);
-        panelFormulario.add(txtPrecio, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        panelFormulario.add(new JLabel("Subtotal:"), gbc);
-        gbc.gridx++;
-        txtSubtotal = new JTextField(10);
-        txtSubtotal.setEditable(false);
-        panelFormulario.add(txtSubtotal, gbc);
-
-        add(panelFormulario, BorderLayout.NORTH);
-
-        // Tabla
-        tabla = new JTable();
-        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scroll = new JScrollPane(tabla);
-        add(scroll, BorderLayout.CENTER);
-
-        // Panel de botones
-        JPanel panelBotones = new JPanel();
-        JButton btnGuardar = new JButton("Guardar");
-        JButton btnEditar = new JButton("Editar");
-        JButton btnEliminar = new JButton("Eliminar");
-        JButton btnLimpiar = new JButton("Limpiar");
-        panelBotones.add(btnLimpiar);
-        panelBotones.add(btnEditar);
-        panelBotones.add(btnEliminar);
-        panelBotones.add(btnGuardar);
-        add(panelBotones, BorderLayout.SOUTH);
-
-        btnGuardar.addActionListener(e -> guardar());
-        btnEditar.addActionListener(e -> cargarSeleccion());
-        btnEliminar.addActionListener(e -> eliminar());
-        btnLimpiar.addActionListener(e -> limpiar());
-        cbProducto.addActionListener(e -> completarPrecioDesdeProducto());
-
-        // ✅ ORDEN CORRECTO: Primero configurar combos, luego cargar datos,
-        // y finalmente refrescar tabla (que asigna el modelo y configura renderers)
         configurarCombos();
         cargarCombos();
-        refrescarTabla();  // Esto ahora configura el modelo Y los renderers
+        refrescarTabla();
 
-        pack();
+        setSize(1000, 650);
     }
 
-    private DefaultTableModel crearModeloTabla() {
-        return new DefaultTableModel(
-                new Object[]{"ID", "Factura", "Producto", "Cantidad", "Precio", "Subtotal"}, 0
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+    private JPanel crearPanelFormulario() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(PANEL_COLOR);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                new TitledBorder(BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                        "Datos del Detalle",
+                        TitledBorder.LEFT,
+                        TitledBorder.TOP,
+                        new Font("Segoe UI", Font.BOLD, 14),
+                        PRIMARY_COLOR),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
 
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                switch (columnIndex) {
-                    case 0:
-                        return Integer.class;
-                    case 1:
-                        return Factura.class;
-                    case 2:
-                        return Producto.class;
-                    case 3:
-                        return Integer.class;
-                    case 4:
-                    case 5:
-                        return Float.class;
-                    default:
-                        return Object.class;
-                }
-            }
-        };
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Primera fila: Factura
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.0;
+        gbc.gridwidth = 1;
+        panel.add(crearLabel("Factura:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 2;
+        cbFactura = new JComboBox<>();
+        cbFactura.setPrototypeDisplayValue(new Factura());
+        estilizarComboBox(cbFactura);
+        panel.add(cbFactura, gbc);
+
+        // Segunda fila: Producto
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.0;
+        gbc.gridwidth = 1;
+        panel.add(crearLabel("Producto:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 2;
+        cbProducto = new JComboBox<>();
+        estilizarComboBox(cbProducto);
+        cbProducto.addActionListener(e -> completarPrecioDesdeProducto());
+        panel.add(cbProducto, gbc);
+
+        // Tercera fila: Cantidad, Precio y Subtotal
+        gbc.gridwidth = 1;
+        gbc.gridy = 2;
+
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        panel.add(crearLabel("Cantidad:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.3;
+        txtCantidad = new JTextField(10);
+        estilizarTextField(txtCantidad);
+        txtCantidad.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+        });
+        panel.add(txtCantidad, gbc);
+
+        gbc.gridx = 2;
+        gbc.weightx = 0.0;
+        panel.add(crearLabel("Precio Unitario:"), gbc);
+
+        gbc.gridx = 3;
+        gbc.weightx = 0.3;
+        txtPrecio = new JTextField(10);
+        estilizarTextField(txtPrecio);
+        txtPrecio.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { recalcularSubtotal(); }
+        });
+        panel.add(txtPrecio, gbc);
+
+        gbc.gridx = 4;
+        gbc.weightx = 0.0;
+        panel.add(crearLabel("Subtotal:"), gbc);
+
+        gbc.gridx = 5;
+        gbc.weightx = 0.4;
+        txtSubtotal = new JTextField(12);
+        txtSubtotal.setEditable(false);
+        txtSubtotal.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtSubtotal.setForeground(SUCCESS_COLOR);
+        txtSubtotal.setBackground(new Color(232, 245, 233));
+        txtSubtotal.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(SUCCESS_COLOR, 2),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        txtSubtotal.setPreferredSize(new Dimension(120, 35));
+        txtSubtotal.setHorizontalAlignment(JTextField.RIGHT);
+        panel.add(txtSubtotal, gbc);
+
+        return panel;
     }
 
-    // ✅ MÉTODO MOVIDO: Ahora se llama desde refrescarTabla() DESPUÉS de asignar el modelo
+    private JLabel crearLabel(String texto) {
+        JLabel label = new JLabel(texto);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        label.setForeground(TEXT_COLOR);
+        return label;
+    }
+
+    private JPanel crearPanelTabla() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(PANEL_COLOR);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                new TitledBorder(BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                        "Lista de Detalles de Factura",
+                        TitledBorder.LEFT,
+                        TitledBorder.TOP,
+                        new Font("Segoe UI", Font.BOLD, 14),
+                        PRIMARY_COLOR),
+                new EmptyBorder(10, 10, 10, 10)
+        ));
+
+        tabla = new JTable();
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabla.setRowHeight(30);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabla.setSelectionBackground(new Color(174, 214, 241));
+        tabla.setSelectionForeground(TEXT_COLOR);
+        tabla.setGridColor(new Color(189, 195, 199));
+        tabla.setShowGrid(true);
+
+        JTableHeader header = tabla.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setBackground(new Color(189, 195, 199));
+        header.setForeground(Color.BLACK);
+        header.setPreferredSize(new Dimension(header.getWidth(), 35));
+
+        configurarRenderers();
+
+        JScrollPane scrollPane = new JScrollPane(tabla);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel crearPanelBotones() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        panel.setBackground(BACKGROUND_COLOR);
+
+        JButton btnLimpiar = crearBoton("🔄 Limpiar", WARNING_COLOR);
+        JButton btnEditar = crearBoton("✏️ Editar", SECONDARY_COLOR);
+        JButton btnEliminar = crearBoton("🗑️ Eliminar", DANGER_COLOR);
+        JButton btnGuardar = crearBoton("💾 Guardar", SUCCESS_COLOR);
+
+        btnLimpiar.addActionListener(e -> limpiar());
+        btnEditar.addActionListener(e -> cargarSeleccion());
+        btnEliminar.addActionListener(e -> eliminar());
+        btnGuardar.addActionListener(e -> guardar());
+
+        panel.add(btnLimpiar);
+        panel.add(btnEditar);
+        panel.add(btnEliminar);
+        panel.add(btnGuardar);
+
+        return panel;
+    }
+
+    private JButton crearBoton(String texto, Color color) {
+        JButton boton = new JButton(texto);
+        boton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        boton.setBackground(color);
+        boton.setForeground(Color.WHITE);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setPreferredSize(new Dimension(130, 38));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        boton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                boton.setBackground(color.brighter());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                boton.setBackground(color);
+            }
+        });
+
+        return boton;
+    }
+
+    private void estilizarTextField(JTextField textField) {
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        textField.setPreferredSize(new Dimension(150, 35));
+    }
+
+    private void estilizarComboBox(JComboBox<?> comboBox) {
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comboBox.setPreferredSize(new Dimension(300, 35));
+        comboBox.setBackground(Color.WHITE);
+    }
+
     private void configurarRenderers() {
-        // Verificar que la tabla tiene modelo y columnas
-        if (tabla.getModel() == null || tabla.getColumnCount() == 0) {
-            return;
-        }
-
         tabla.setDefaultRenderer(Factura.class, new DefaultTableCellRenderer() {
             @Override
             protected void setValue(Object value) {
@@ -209,32 +321,21 @@ public class DetalleFacturaFrame extends JDialog {
             }
         });
 
-        DefaultTableCellRenderer derecha = new DefaultTableCellRenderer();
-        derecha.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        // ✅ AHORA SÍ hay columnas disponibles
-        if (tabla.getColumnCount() > 3) {
-            tabla.getColumnModel().getColumn(3).setCellRenderer(derecha);
-        }
-        if (tabla.getColumnCount() > 4) {
-            tabla.getColumnModel().getColumn(4).setCellRenderer(derecha);
-        }
-        if (tabla.getColumnCount() > 5) {
-            tabla.getColumnModel().getColumn(5).setCellRenderer(derecha);
-        }
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        tabla.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        tabla.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+        tabla.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
     }
 
     private void configurarCombos() {
         cbFactura.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(javax.swing.JList<?> list,
-                                                          Object value,
-                                                          int index,
-                                                          boolean isSelected,
-                                                          boolean cellHasFocus) {
+                                                          Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
                 Component comp = super.getListCellRendererComponent(
-                        list, value, index, isSelected, cellHasFocus
-                );
+                        list, value, index, isSelected, cellHasFocus);
                 if (value instanceof Factura) {
                     Factura factura = (Factura) value;
                     String numero = factura.getNumeroFactura();
@@ -250,13 +351,10 @@ public class DetalleFacturaFrame extends JDialog {
         cbProducto.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(javax.swing.JList<?> list,
-                                                          Object value,
-                                                          int index,
-                                                          boolean isSelected,
-                                                          boolean cellHasFocus) {
+                                                          Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
                 Component comp = super.getListCellRendererComponent(
-                        list, value, index, isSelected, cellHasFocus
-                );
+                        list, value, index, isSelected, cellHasFocus);
                 if (value instanceof Producto) {
                     Producto producto = (Producto) value;
                     String nombre = producto.getNombre();
@@ -285,12 +383,34 @@ public class DetalleFacturaFrame extends JDialog {
 
     private void completarPrecioDesdeProducto() {
         Producto producto = (Producto) cbProducto.getSelectedItem();
-        if (producto != null
-                && producto.getPrecio() != null
-                && txtPrecio.getText().trim().isEmpty()) {
+        if (producto != null && producto.getPrecio() != null &&
+                txtPrecio.getText().trim().isEmpty()) {
             txtPrecio.setText(producto.getPrecio().toString());
             recalcularSubtotal();
         }
+    }
+
+    private DefaultTableModel crearModeloTabla() {
+        return new DefaultTableModel(
+                new Object[]{"ID", "Factura", "Producto", "Cantidad", "Precio", "Subtotal"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                switch (columnIndex) {
+                    case 0: return Integer.class;
+                    case 1: return Factura.class;
+                    case 2: return Producto.class;
+                    case 3: return Integer.class;
+                    case 4:
+                    case 5: return Float.class;
+                    default: return Object.class;
+                }
+            }
+        };
     }
 
     private void refrescarTabla() {
@@ -307,8 +427,13 @@ public class DetalleFacturaFrame extends JDialog {
         }
         tabla.setModel(modelo);
 
-        // ✅ AHORA configuramos los renderers DESPUÉS de asignar el modelo
-        configurarRenderers();
+        // Ajustar anchos de columnas
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(150);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(250);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(4).setPreferredWidth(120);
+        tabla.getColumnModel().getColumn(5).setPreferredWidth(120);
     }
 
     private void limpiar() {
@@ -318,6 +443,7 @@ public class DetalleFacturaFrame extends JDialog {
         txtPrecio.setText("");
         txtSubtotal.setText("");
         tabla.clearSelection();
+        cbFactura.requestFocus();
     }
 
     private void recalcularSubtotal() {
@@ -333,7 +459,7 @@ public class DetalleFacturaFrame extends JDialog {
             int cantidad = Integer.parseInt(cantidadStr);
             BigDecimal precio = new BigDecimal(precioStr);
             BigDecimal subtotal = precio.multiply(new BigDecimal(cantidad));
-            txtSubtotal.setText(subtotal.toPlainString());
+            txtSubtotal.setText("$ " + subtotal.toPlainString());
         } catch (NumberFormatException ex) {
             txtSubtotal.setText("");
         }
@@ -344,10 +470,8 @@ public class DetalleFacturaFrame extends JDialog {
         Producto producto = (Producto) cbProducto.getSelectedItem();
 
         if (factura == null || producto == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Debe seleccionar una factura y un producto",
-                    "Validación",
-                    JOptionPane.WARNING_MESSAGE);
+            mostrarMensaje("Debe seleccionar una factura y un producto",
+                    "Validación", JOptionPane.WARNING_MESSAGE);
             return null;
         }
 
@@ -355,10 +479,8 @@ public class DetalleFacturaFrame extends JDialog {
         String precioStr = txtPrecio.getText().trim().replace(",", ".");
 
         if (cantidadStr.isEmpty() || precioStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Cantidad y precio son obligatorios",
-                    "Validación",
-                    JOptionPane.WARNING_MESSAGE);
+            mostrarMensaje("Cantidad y precio son obligatorios",
+                    "Validación", JOptionPane.WARNING_MESSAGE);
             return null;
         }
 
@@ -378,9 +500,7 @@ public class DetalleFacturaFrame extends JDialog {
             detalle.setSubtotal(subtotal);
             return detalle;
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Cantidad o precio inválidos",
-                    "Error",
+            mostrarMensaje("Cantidad o precio inválidos", "Error",
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }
@@ -404,15 +524,17 @@ public class DetalleFacturaFrame extends JDialog {
         try {
             if (idExistente == null) {
                 detalleDAO.insertar(detalle);
+                mostrarMensaje("Detalle guardado exitosamente", "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
                 detalleDAO.actualizar(detalle);
+                mostrarMensaje("Detalle actualizado exitosamente", "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
             limpiar();
             refrescarTabla();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this,
-                    ex.getMessage(),
-                    "Error",
+            mostrarMensaje("Error al guardar: " + ex.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -420,6 +542,8 @@ public class DetalleFacturaFrame extends JDialog {
     private void cargarSeleccion() {
         int fila = tabla.getSelectedRow();
         if (fila < 0) {
+            mostrarMensaje("Debe seleccionar un detalle de la tabla",
+                    "Selección requerida", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -434,37 +558,43 @@ public class DetalleFacturaFrame extends JDialog {
         cbProducto.setSelectedItem(producto);
         txtCantidad.setText(String.valueOf(cantidad));
         txtPrecio.setText(String.valueOf(precio));
-        txtSubtotal.setText(String.valueOf(subtotal));
+        txtSubtotal.setText("$ " + String.valueOf(subtotal));
     }
 
     private void eliminar() {
         int fila = tabla.getSelectedRow();
         if (fila < 0) {
+            mostrarMensaje("Debe seleccionar un detalle de la tabla",
+                    "Selección requerida", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+
         Integer id = (Integer) tabla.getValueAt(fila, 0);
         if (id == null) {
             return;
         }
 
-        int opcion = JOptionPane.showConfirmDialog(
-                this,
-                "¿Eliminar detalle " + id + "?",
-                "Confirmar",
-                JOptionPane.YES_NO_OPTION
-        );
+        int opcion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de eliminar el detalle #" + id + "?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
         if (opcion == JOptionPane.YES_OPTION) {
             try {
                 detalleDAO.eliminar(id);
+                mostrarMensaje("Detalle eliminado exitosamente", "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
                 limpiar();
                 refrescarTabla();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this,
-                        ex.getMessage(),
-                        "Error",
+                mostrarMensaje("Error al eliminar: " + ex.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void mostrarMensaje(String mensaje, String titulo, int tipo) {
+        JOptionPane.showMessageDialog(this, mensaje, titulo, tipo);
     }
 }
