@@ -8,9 +8,9 @@ import java.sql.SQLException;
 public class ConexionDB {
 
     // Datos de conexión
-    private static final String URL = "jdbc:postgresql://localhost:5432/Ventas";
+    private static final String URL = "jdbc:postgresql://localhost:5433/Ventas";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "198996";
+    private static final String PASSWORD = "Nano-987";
     private static final String DRIVER = "org.postgresql.Driver";
 
     // Única instancia de Connection

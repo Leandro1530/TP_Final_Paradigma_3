@@ -118,6 +118,9 @@ public class DetalleFacturaDAO implements IDetalleFacturaDAO {
     }
 
     private void prepararDetalle(DetalleFactura detalle, PreparedStatement ps) throws SQLException {
+        if (detalle == null) {
+            throw new SQLException("El detalle no puede ser nulo");
+        }
         Factura factura = detalle.getFactura();
         if (factura == null || factura.getIdFactura() <= 0) {
             throw new SQLException("Debe indicar la factura");
