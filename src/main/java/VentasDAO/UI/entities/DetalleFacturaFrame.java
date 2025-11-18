@@ -1,7 +1,9 @@
 package VentasDAO.UI.entities;
 
+import VentasDAO.DAO.ClienteDAO;
 import VentasDAO.DAO.DetalleFacturaDAO;
 import VentasDAO.DAO.FacturaDAO;
+import VentasDAO.DAO.FormaPagoDAO;
 import VentasDAO.Objetos.Cliente;
 import VentasDAO.Objetos.DetalleFactura;
 import VentasDAO.Objetos.Factura;
@@ -17,9 +19,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Visor de facturas y sus detalles (SOLO LECTURA - NO ABM).
@@ -30,9 +33,15 @@ public class DetalleFacturaFrame extends JDialog {
 
     private final FacturaDAO facturaDAO;
     private final DetalleFacturaDAO detalleFacturaDAO;
+    private final ClienteDAO clienteDAO;
+    private final FormaPagoDAO formaPagoDAO;
 
     private final JTable tablaFacturas;
     private final JTable tablaDetalles;
+
+    // Mapas para cachear datos y evitar consultas repetidas
+    private Map<Integer, Cliente> cacheClientes;
+    private Map<Integer, FormaPago> cacheFormasPago;
 
     // Colores del tema
     private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
@@ -51,14 +60,23 @@ public class DetalleFacturaFrame extends JDialog {
         super(JOptionPane.getFrameForComponent(parent),
                 "Registro de Facturas y Detalles", true);
 
+        // Inicializar DAOs
         this.facturaDAO = new FacturaDAO();
         this.detalleFacturaDAO = new DetalleFacturaDAO();
+        this.clienteDAO = new ClienteDAO();
+        this.formaPagoDAO = new FormaPagoDAO();
 
+        // Inicializar tablas
         this.tablaFacturas = new JTable();
         this.tablaDetalles = new JTable();
 
+        // Inicializar caches
+        this.cacheClientes = new HashMap<>();
+        this.cacheFormasPago = new HashMap<>();
+
         initUI();
         configurarEventos();
+        cargarCaches();
         cargarFacturas();
 
         setLocationRelativeTo(parent);
@@ -186,6 +204,7 @@ public class DetalleFacturaFrame extends JDialog {
         JButton btnCerrar = crearBoton("✖ Cerrar", WARNING_COLOR);
 
         btnRefrescar.addActionListener(e -> {
+            cargarCaches();
             cargarFacturas();
             limpiarDetalles();
         });
@@ -241,7 +260,29 @@ public class DetalleFacturaFrame extends JDialog {
     }
 
     /**
-     * Carga la tabla de facturas desde la base de datos.
+     * Carga los datos de clientes y formas de pago en memoria para mejorar performance.
+     */
+    private void cargarCaches() {
+        cacheClientes.clear();
+        cacheFormasPago.clear();
+
+        // Cargar clientes
+        List<Cliente> clientes = clienteDAO.listar();
+        for (Cliente cliente : clientes) {
+            if (cliente.getIdCliente() != null) {
+                cacheClientes.put(cliente.getIdCliente(), cliente);
+            }
+        }
+
+        // Cargar formas de pago
+        List<FormaPago> formasPago = formaPagoDAO.listar();
+        for (FormaPago fp : formasPago) {
+            cacheFormasPago.put(fp.getIdFormaPago(), fp);
+        }
+    }
+
+    /**
+     * Carga la tabla de facturas usando FacturaDAO.
      */
     private void cargarFacturas() {
         DefaultTableModel modelo = new DefaultTableModel(
@@ -261,8 +302,8 @@ public class DetalleFacturaFrame extends JDialog {
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-        // Cargar facturas con datos completos usando consulta mejorada
-        List<Factura> facturas = listarFacturasConDatosCompletos();
+        // Usar FacturaDAO para obtener las facturas
+        List<Factura> facturas = facturaDAO.listar();
 
         for (Factura factura : facturas) {
             // ID
@@ -281,23 +322,35 @@ public class DetalleFacturaFrame extends JDialog {
                 fecha = sdf.format(fechaGeneracion);
             }
 
-            // Cliente
+            // Cliente - buscar en caché o usar el objeto que viene del DAO
             String nombreCliente = "-";
             Cliente cliente = factura.getCliente();
-            if (cliente != null) {
-                String nombre = cliente.getNombre() != null ? cliente.getNombre() : "";
-                String apellido = cliente.getApellido() != null ? cliente.getApellido() : "";
-                nombreCliente = (nombre + " " + apellido).trim();
-                if (nombreCliente.isEmpty()) {
-                    nombreCliente = "-";
+            if (cliente != null && cliente.getIdCliente() != null) {
+                // Buscar datos completos del cliente en caché
+                Cliente clienteCompleto = cacheClientes.get(cliente.getIdCliente());
+                if (clienteCompleto != null) {
+                    String nombre = clienteCompleto.getNombre() != null ? clienteCompleto.getNombre() : "";
+                    String apellido = clienteCompleto.getApellido() != null ? clienteCompleto.getApellido() : "";
+                    nombreCliente = (nombre + " " + apellido).trim();
+                    if (nombreCliente.isEmpty()) {
+                        nombreCliente = "Cliente ID: " + cliente.getIdCliente();
+                    }
+                } else {
+                    nombreCliente = "Cliente ID: " + cliente.getIdCliente();
                 }
             }
 
-            // Forma de pago
+            // Forma de pago - buscar en caché o usar el objeto que viene del DAO
             String formaPago = "-";
             FormaPago fp = factura.getFormapago();
-            if (fp != null && fp.getNombre() != null) {
-                formaPago = fp.getNombre();
+            if (fp != null && fp.getIdFormaPago() > 0) {
+                // Buscar datos completos en caché
+                FormaPago fpCompleta = cacheFormasPago.get(fp.getIdFormaPago());
+                if (fpCompleta != null && fpCompleta.getNombre() != null) {
+                    formaPago = fpCompleta.getNombre();
+                } else {
+                    formaPago = "Forma Pago ID: " + fp.getIdFormaPago();
+                }
             }
 
             // Total
@@ -330,70 +383,6 @@ public class DetalleFacturaFrame extends JDialog {
     }
 
     /**
-     * Lista facturas con datos completos de cliente y forma de pago.
-     * Esta consulta hace JOIN para traer los nombres completos.
-     */
-    private List<Factura> listarFacturasConDatosCompletos() {
-        List<Factura> facturas = new ArrayList<>();
-        String sql = "SELECT f.id_factura, f.numero_factura, f.fecha_generacion, f.total, f.observaciones, "
-                + "c.id_cliente, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, "
-                + "fp.id_forma_pago, fp.nombre AS forma_pago_nombre "
-                + "FROM factura f "
-                + "LEFT JOIN cliente c ON f.id_cliente = c.id_cliente "
-                + "LEFT JOIN forma_pago fp ON f.id_forma_pago = fp.id_forma_pago "
-                + "ORDER BY f.id_factura";
-
-        try (java.sql.Connection cn = VentasDAO.Conexion.ConexionDB.getConnection();
-             java.sql.PreparedStatement ps = cn.prepareStatement(sql);
-             java.sql.ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                Integer idFactura = rs.getInt("id_factura");
-                String numeroFactura = rs.getString("numero_factura");
-                Date fechaGeneracion = rs.getDate("fecha_generacion");
-                float total = rs.getFloat("total");
-                String observaciones = rs.getString("observaciones");
-
-                // Cliente con datos completos
-                Cliente cliente = null;
-                Integer idCliente = (Integer) rs.getObject("id_cliente");
-                if (idCliente != null) {
-                    cliente = new Cliente();
-                    cliente.setIdCliente(idCliente);
-                    cliente.setNombre(rs.getString("cliente_nombre"));
-                    cliente.setApellido(rs.getString("cliente_apellido"));
-                }
-
-                // FormaPago con datos completos
-                FormaPago formaPago = null;
-                Integer idFormaPago = (Integer) rs.getObject("id_forma_pago");
-                if (idFormaPago != null) {
-                    formaPago = new FormaPago(
-                            idFormaPago,
-                            rs.getString("forma_pago_nombre"),
-                            null
-                    );
-                }
-
-                facturas.add(new Factura(
-                        idFactura,
-                        numeroFactura,
-                        fechaGeneracion,
-                        total,
-                        observaciones,
-                        cliente,
-                        formaPago,
-                        null
-                ));
-            }
-        } catch (java.sql.SQLException ex) {
-            ex.printStackTrace();
-        }
-
-        return facturas;
-    }
-
-    /**
      * Limpia la tabla de detalles.
      */
     private void limpiarDetalles() {
@@ -415,7 +404,7 @@ public class DetalleFacturaFrame extends JDialog {
     }
 
     /**
-     * Carga los detalles de la factura seleccionada.
+     * Carga los detalles de la factura seleccionada usando DetalleFacturaDAO.
      */
     private void cargarDetallesDeFacturaSeleccionada() {
         int filaSeleccionada = tablaFacturas.getSelectedRow();
@@ -449,11 +438,11 @@ public class DetalleFacturaFrame extends JDialog {
             }
         };
 
-        // Obtener detalles de la factura
+        // Usar DetalleFacturaDAO para obtener los detalles de la factura
         List<DetalleFactura> detalles = detalleFacturaDAO.listarPorFactura(idFactura);
 
         for (DetalleFactura detalle : detalles) {
-            // Producto
+            // Producto - el DAO ya trae el nombre mediante JOIN
             String nombreProducto = "-";
             if (detalle.getProducto() != null && detalle.getProducto().getNombre() != null) {
                 nombreProducto = detalle.getProducto().getNombre();
