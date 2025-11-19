@@ -1,8 +1,6 @@
 package VentasDAO.Objetos;
 
-/**
- * Entidad que representa a la tabla {@code cliente}.
- */
+
 public class Cliente {
 
     private int idCliente;
@@ -12,7 +10,6 @@ public class Cliente {
     private String direccion;
     private String telefono;
     private String email;
-    // NOT NULL en la BD: el DAO debe validar antes de insertar/actualizar.
     private TipoCliente tipoCliente;
 
     public Cliente() {
@@ -93,6 +90,11 @@ public class Cliente {
 
     public void setTipoCliente(TipoCliente tipoCliente) {
         this.tipoCliente = tipoCliente;
+    }
+
+    @Override
+    public String toString() {
+        return nombre != null ? nombre : "Cliente";
     }
 
 

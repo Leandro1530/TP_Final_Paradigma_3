@@ -2,21 +2,14 @@ package VentasDAO.Objetos;
 
 import java.math.BigDecimal;
 
-/**
- * Entidad que representa a la tabla {@code producto}.
- */
+
 public class Producto {
 
     private int idProducto;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String nombre;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String descripcion;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private BigDecimal precio;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private int stock;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private Categoria categoria;
 
     public Producto() {
@@ -79,7 +72,6 @@ public class Producto {
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
-
 
     @Override
     public String toString() {

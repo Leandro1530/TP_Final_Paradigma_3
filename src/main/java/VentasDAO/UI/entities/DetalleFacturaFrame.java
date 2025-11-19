@@ -24,11 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Visor de facturas y sus detalles (SOLO LECTURA - NO ABM).
- * Muestra una tabla de facturas emitidas (maestro) y al seleccionar una,
- * muestra sus renglones de productos (detalle).
- */
+
 public class DetalleFacturaFrame extends JDialog {
 
     private final FacturaDAO facturaDAO;
@@ -52,10 +48,7 @@ public class DetalleFacturaFrame extends JDialog {
     private static final Color PANEL_COLOR = Color.WHITE;
     private static final Color TEXT_COLOR = new Color(44, 62, 80);
 
-    /**
-     * Constructor principal.
-     * @param parent Componente padre para centrar el diálogo
-     */
+
     public DetalleFacturaFrame(java.awt.Component parent) {
         super(JOptionPane.getFrameForComponent(parent),
                 "Registro de Facturas y Detalles", true);
@@ -82,9 +75,7 @@ public class DetalleFacturaFrame extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    /**
-     * Inicializa la interfaz gráfica.
-     */
+
     private void initUI() {
         setSize(1200, 750);
         setLayout(new BorderLayout(10, 10));
@@ -115,9 +106,7 @@ public class DetalleFacturaFrame extends JDialog {
         add(mainPanel);
     }
 
-    /**
-     * Crea el panel superior con la tabla de facturas.
-     */
+
     private JPanel crearPanelFacturas() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(PANEL_COLOR);
@@ -154,9 +143,7 @@ public class DetalleFacturaFrame extends JDialog {
         return panel;
     }
 
-    /**
-     * Crea el panel inferior con la tabla de detalles.
-     */
+
     private JPanel crearPanelDetalles() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(PANEL_COLOR);
@@ -193,15 +180,13 @@ public class DetalleFacturaFrame extends JDialog {
         return panel;
     }
 
-    /**
-     * Crea el panel de botones inferior.
-     */
+
     private JPanel crearPanelBotones() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panel.setBackground(BACKGROUND_COLOR);
 
-        JButton btnRefrescar = crearBoton("🔄 Refrescar", SUCCESS_COLOR);
-        JButton btnCerrar = crearBoton("✖ Cerrar", WARNING_COLOR);
+        JButton btnRefrescar = crearBoton(" Refrescar", SUCCESS_COLOR);
+        JButton btnCerrar = crearBoton(" Cerrar", WARNING_COLOR);
 
         btnRefrescar.addActionListener(e -> {
             cargarCaches();
@@ -217,9 +202,7 @@ public class DetalleFacturaFrame extends JDialog {
         return panel;
     }
 
-    /**
-     * Crea un botón estilizado.
-     */
+
     private JButton crearBoton(String texto, Color color) {
         JButton boton = new JButton(texto);
         boton.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -243,9 +226,7 @@ public class DetalleFacturaFrame extends JDialog {
         return boton;
     }
 
-    /**
-     * Configura los eventos de selección de la tabla de facturas.
-     */
+
     private void configurarEventos() {
         tablaFacturas.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -259,9 +240,7 @@ public class DetalleFacturaFrame extends JDialog {
         );
     }
 
-    /**
-     * Carga los datos de clientes y formas de pago en memoria para mejorar performance.
-     */
+
     private void cargarCaches() {
         cacheClientes.clear();
         cacheFormasPago.clear();
@@ -281,9 +260,7 @@ public class DetalleFacturaFrame extends JDialog {
         }
     }
 
-    /**
-     * Carga la tabla de facturas usando FacturaDAO.
-     */
+
     private void cargarFacturas() {
         DefaultTableModel modelo = new DefaultTableModel(
                 new Object[]{"ID", "N° Factura", "Fecha", "Cliente", "Forma pago", "Total"}, 0) {
@@ -382,9 +359,7 @@ public class DetalleFacturaFrame extends JDialog {
         tablaFacturas.getColumnModel().getColumn(5).setPreferredWidth(120);
     }
 
-    /**
-     * Limpia la tabla de detalles.
-     */
+
     private void limpiarDetalles() {
         DefaultTableModel modelo = new DefaultTableModel(
                 new Object[]{"Producto", "Cantidad", "Precio unitario", "Subtotal"}, 0) {
@@ -403,9 +378,7 @@ public class DetalleFacturaFrame extends JDialog {
         tablaDetalles.setModel(modelo);
     }
 
-    /**
-     * Carga los detalles de la factura seleccionada usando DetalleFacturaDAO.
-     */
+
     private void cargarDetallesDeFacturaSeleccionada() {
         int filaSeleccionada = tablaFacturas.getSelectedRow();
 

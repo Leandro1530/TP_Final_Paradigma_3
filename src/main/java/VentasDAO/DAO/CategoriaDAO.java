@@ -10,9 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operaciones sobre la tabla {@code categoria}.
- */
+
 public class CategoriaDAO implements ICategoriaDAO {
 
     @Override

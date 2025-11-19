@@ -5,9 +5,7 @@ import VentasDAO.Objetos.Cliente;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Contrato de acceso a datos para {@link Cliente}.
- */
+
 public interface IClienteDAO {
     List<Cliente> listar();
 

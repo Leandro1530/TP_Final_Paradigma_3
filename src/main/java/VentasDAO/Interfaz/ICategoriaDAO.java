@@ -5,9 +5,7 @@ import VentasDAO.Objetos.Categoria;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Contrato para las operaciones CRUD de {@link Categoria}.
- */
+
 public interface ICategoriaDAO {
     List<Categoria> listar();
 

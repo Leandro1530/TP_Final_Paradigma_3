@@ -11,9 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operaciones sobre la tabla {@code forma_pago}.
- */
+
 public class FormaPagoDAO implements IFormaPagoDAO {
 
     @Override

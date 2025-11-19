@@ -5,9 +5,7 @@ import VentasDAO.Objetos.FormaPago;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Contrato para la administración de {@link FormaPago}.
- */
+
 public interface IFormaPagoDAO {
     List<FormaPago> listar();
 

@@ -13,9 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operaciones sobre la tabla {@code producto}.
- */
+
 public class ProductoDAO implements IProductoDAO {
 
     @Override

@@ -40,6 +40,6 @@ public class TipoCliente {
 
     @Override
     public String toString() {
-        return nombre != null ? nombre : "Tipo";
+        return nombre != null ? nombre : "Tipo de Cliente";
     }
 }

@@ -15,9 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para la generación de facturas.
- */
+
 public class FacturaDAO implements IFacturaDAO {
 
     @Override
@@ -59,7 +57,7 @@ public class FacturaDAO implements IFacturaDAO {
                     idFactura = rs.getInt(1);
                 }
 
-                // ✅ CORRECCIÓN: Validar y usar el producto correctamente
+                //  CORRECCIÓN: Validar y usar el producto correctamente
                 try (PreparedStatement psDetalle = cn.prepareStatement(sqlDetalle)) {
                     for (DetalleFactura detalle : detalles) {
                         // Validar que el producto existe y tiene ID válido
@@ -73,7 +71,7 @@ public class FacturaDAO implements IFacturaDAO {
                         }
 
                         psDetalle.setInt(1, idFactura);
-                        psDetalle.setInt(2, idProducto); // ✅ Usar el ID del producto correctamente
+                        psDetalle.setInt(2, idProducto); //  Usar el ID del producto correctamente
                         psDetalle.setInt(3, detalle.getCantidad());
                         psDetalle.setFloat(4, detalle.getPrecioUnitario());
 

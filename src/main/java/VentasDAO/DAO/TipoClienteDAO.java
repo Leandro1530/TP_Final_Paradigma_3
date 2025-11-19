@@ -11,9 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para la tabla {@code tipo_cliente}.
- */
+
 public class TipoClienteDAO implements ITipoClienteDAO {
 
     @Override

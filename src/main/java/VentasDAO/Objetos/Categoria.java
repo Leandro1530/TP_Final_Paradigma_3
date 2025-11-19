@@ -1,14 +1,10 @@
 package VentasDAO.Objetos;
 
-/**
- * Entidad que representa a la tabla {@code categoria}.
- */
+
 public class Categoria {
 
     private int idCategoria;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String nombre;
-    // NOT NULL en la BD: validar antes de insertar/actualizar.
     private String descripcion;
 
     public Categoria() {

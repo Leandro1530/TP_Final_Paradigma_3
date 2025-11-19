@@ -7,10 +7,7 @@ import javax.swing.UIManager;
 
 import VentasDAO.UI.MainFrame;
 
-/**
- * Punto de entrada del sistema. Centraliza la configuración de la apariencia y
- * garantiza que la interfaz se inicialice dentro del EDT.
- */
+
 public final class Main {
 
     private Main() {

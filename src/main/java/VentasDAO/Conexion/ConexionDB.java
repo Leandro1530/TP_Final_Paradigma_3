@@ -20,9 +20,7 @@ public class ConexionDB {
     private ConexionDB() {
     }
 
-    /**
-     * Devuelve la conexión activa. Si no existe o está cerrada, la crea.
-     */
+
     public static Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
@@ -40,9 +38,6 @@ public class ConexionDB {
         return connection;
     }
 
-    /**
-     * Cierra la conexión y limpia la instancia.
-     */
     public static void closeConnection() {
         if (connection != null) {
             try {
@@ -55,9 +50,6 @@ public class ConexionDB {
         }
     }
 
-    /**
-     * Indica si la conexión está activa.
-     */
     public static boolean isConnectionActive() {
         try {
             return connection != null && !connection.isClosed();
@@ -66,9 +58,7 @@ public class ConexionDB {
         }
     }
 
-    /**
-     * Devuelve información básica del estado de la conexión.
-     */
+
     public static String getConnectionInfo() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -82,9 +72,7 @@ public class ConexionDB {
         }
     }
 
-    /**
-     * Main de prueba rápida de conexión.
-     */
+
     public static void main(String[] args) {
         System.out.println("Probando conexión a la base de datos...");
         try {
